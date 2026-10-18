@@ -1,0 +1,2942 @@
+type: sections
+max_columns: 7
+badges:
+- type: entity
+  show_name: true
+  show_state: false
+  show_icon: true
+  entity: input_select.dashboard
+  tap_action:
+    action: perform-action
+    perform_action: input_select.select_option
+    target:
+      entity_id: input_select.dashboard
+    data:
+      option: Favorites
+  icon: mdi:star
+  name: Favorites
+- type: entity
+  show_name: true
+  show_state: false
+  show_icon: true
+  entity: input_select.dashboard
+  tap_action:
+    action: perform-action
+    perform_action: input_select.select_option
+    target:
+      entity_id: input_select.dashboard
+    data:
+      option: Living
+  icon: mdi:sofa
+  name: Living
+  visibility:
+  - condition: state
+    entity: input_boolean.armed
+    state: 'off'
+- type: entity
+  show_name: true
+  show_state: false
+  show_icon: true
+  entity: input_select.dashboard
+  tap_action:
+    action: perform-action
+    perform_action: input_select.select_option
+    target:
+      entity_id: input_select.dashboard
+    data:
+      option: Rooms
+  icon: mdi:bed-double
+  name: Rooms
+  visibility:
+  - condition: state
+    entity: input_boolean.armed
+    state: 'off'
+- type: entity
+  show_name: true
+  show_state: false
+  show_icon: true
+  entity: input_select.dashboard
+  tap_action:
+    action: perform-action
+    perform_action: input_select.select_option
+    target:
+      entity_id: input_select.dashboard
+    data:
+      option: Roof
+  icon: mdi:home-roof
+  name: Roof
+  visibility:
+  - condition: state
+    entity: input_boolean.armed
+    state: 'off'
+- type: entity
+  show_name: true
+  show_state: false
+  show_icon: true
+  entity: input_select.dashboard
+  tap_action:
+    action: perform-action
+    perform_action: input_select.select_option
+    target:
+      entity_id: input_select.dashboard
+    data:
+      option: Garden
+  icon: mdi:tree
+  name: Garden
+  show_entity_picture: false
+  visibility:
+  - condition: state
+    entity: input_boolean.armed
+    state: 'off'
+- type: entity
+  show_name: true
+  show_state: false
+  show_icon: true
+  entity: input_select.dashboard
+  tap_action:
+    action: perform-action
+    perform_action: input_select.select_option
+    target:
+      entity_id: input_select.dashboard
+    data:
+      option: Service
+  icon: mdi:server
+  name: Service
+  show_entity_picture: false
+  visibility:
+  - condition: state
+    entity: input_boolean.armed
+    state: 'off'
+- type: entity
+  show_name: true
+  show_state: false
+  show_icon: true
+  entity: input_select.dashboard
+  tap_action:
+    action: perform-action
+    perform_action: input_select.select_option
+    target:
+      entity_id: input_select.dashboard
+    data:
+      option: Heatpump
+  icon: mdi:heat-pump
+  name: Heatpump
+  show_entity_picture: false
+- type: entity
+  show_name: true
+  show_state: false
+  show_icon: true
+  entity: input_select.dashboard
+  tap_action:
+    action: perform-action
+    perform_action: input_select.select_option
+    target:
+      entity_id: input_select.dashboard
+    data:
+      option: Surveilance
+  icon: mdi:camera
+  name: Surveilance
+  show_entity_picture: false
+- type: entity
+  show_name: true
+  show_state: false
+  show_icon: true
+  entity: input_select.dashboard
+  tap_action:
+    action: perform-action
+    perform_action: input_select.select_option
+    target:
+      entity_id: input_select.dashboard
+    data:
+      option: Music
+  icon: mdi:music
+  name: Music
+  color: red
+  show_entity_picture: false
+  visibility:
+  - condition: state
+    entity: input_boolean.armed
+    state: 'off'
+sections:
+- type: grid
+  cards:
+  - type: tile
+    entity: lock.magnet_door
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: tile
+    entity: lock.qnodoor
+    name: Entry door
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: tile
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'on'
+    entity: input_boolean.siren_alert
+    vertical: false
+    tap_action:
+      action: none
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: toggle
+    features_position: inline
+  - type: custom:weather-forecast-card
+    show_current: true
+    show_forecast: true
+    show_condition_effects: true
+    default_forecast: hourly
+    entity: weather.forecast_home
+    grid_options:
+      columns: full
+      rows: 5
+    name: Weather
+    forecast:
+      mode: chart
+      show_sun_times: true
+      use_color_thresholds: true
+      scroll_to_selected: true
+      default_chart_attribute: temperature_and_precipitation
+      hourly_group_size: 1
+      hourly_slots: 8
+      daily_slots: 8
+      temperature_precision: 1
+      show_attribute_selector: false
+      extra_attribute: precipitation_probability
+    forecast_action:
+      tap_action:
+        action: toggle-forecast
+      hold_action:
+        action: select-forecast-attribute
+    current:
+      temperature_precision: 1
+      secondary_info_attribute: humidity
+  - type: custom:ring-tile
+    name: Heatpump power
+    entity:
+      entity: sensor.wh_warmepumpe_warmeleistung
+    ring_size: 2
+    indicator: arc
+    ring_only: true
+    max: 25000
+    colour:
+      '10': ha_grey
+      '5000': ha_blue
+      '10000': ha_green
+      '15000': ha_yellow
+      '22000': ha_red
+    top_element: icon
+    middle_element: value_with_unit
+    bottom_element: name
+    scale: ticks
+    ring_type: open
+  - type: custom:ring-tile
+    name: Warm water
+    entity:
+      entity: sensor.wh_warmwasser_warmwassertemperatur
+    ring_size: 2
+    indicator: arc
+    ring_only: true
+    max: 70
+    colour:
+      '0': ha_grey
+      '35': ha_blue
+      '45': ha_green
+      '60': ha_green
+      '61': ha_yellow
+      '62': ha_yellow
+      '63': ha_red
+    top_element: icon
+    marker: 63
+    marker_color: ha_orange
+    marker2: 40
+    marker2_color: ha_blue
+    middle_element: value_with_unit
+    bottom_element: name
+    scale: ticks
+    ring_type: open
+  - type: custom:ring-tile
+    name: Flow temperature
+    entity:
+      entity: sensor.wh_warmepumpe_vorlauftemperatur_prazise_summenvorlauf_b7
+    ring_size: 2
+    ring_only: true
+    indicator: arc
+    max: 80
+    colour:
+      '0': ha_grey
+      '15': ha_blue
+      '30': ha_green
+      '49': ha_green
+      '50': ha_yellow
+      '60': ha_red
+    top_element: icon
+    middle_element: value_with_unit
+    bottom_element: name
+    scale: ticks
+  - type: tile
+    grid_options:
+      columns: full
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+    entity: light.kitchen_desk
+    name: Kitchen counter
+    icon: mdi:countertop
+    vertical: false
+    tap_action:
+      action: perform-action
+      perform_action: automation.trigger
+      target:
+        entity_id: automation.kitchen_toggle
+      data:
+        skip_condition: true
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: toggle
+    features_position: inline
+  - type: custom:mushroom-entity-card
+    entity: scene.downstairs_full
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:lamps
+    icon_color: yellow
+    name: All lights
+    tap_action:
+      action: perform-action
+      perform_action: script.downstairs_1
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 6
+      rows: auto
+    visibility:
+    - condition: or
+      conditions:
+      - condition: numeric_state
+        entity: input_number.downstairs_scenes
+        below: 1
+      - condition: numeric_state
+        entity: input_number.downstairs_scenes
+        above: 1
+      - condition: state
+        entity: input_boolean.downstairs
+        state: 'off'
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: custom:mushroom-entity-card
+    entity: scene.downstairs_full
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:lamps
+    icon_color: white
+    name: All lights
+    tap_action:
+      action: perform-action
+      perform_action: script.downstairs_1
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 6
+      rows: auto
+    visibility:
+    - condition: state
+      entity: input_number.downstairs_scenes
+      state: '1.0'
+    - condition: state
+      entity: input_boolean.downstairs
+      state: 'on'
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: custom:mushroom-entity-card
+    entity: scene.downstairs_ambient
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:sofa
+    icon_color: orange
+    name: Ambient lights
+    tap_action:
+      action: perform-action
+      perform_action: script.downstairs_2
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 6
+      rows: auto
+    visibility:
+    - condition: or
+      conditions:
+      - condition: numeric_state
+        entity: input_number.downstairs_scenes
+        below: 2
+      - condition: numeric_state
+        entity: input_number.downstairs_scenes
+        above: 2
+      - condition: state
+        entity: input_boolean.downstairs
+        state: 'off'
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: custom:mushroom-entity-card
+    entity: scene.downstairs_ambient
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:sofa
+    icon_color: white
+    name: Ambient lights
+    tap_action:
+      action: perform-action
+      perform_action: script.downstairs_2
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 6
+      rows: auto
+    visibility:
+    - condition: state
+      entity: input_number.downstairs_scenes
+      state: '2.0'
+    - condition: state
+      entity: input_boolean.downstairs
+      state: 'on'
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: custom:mushroom-entity-card
+    entity: scene.cinema_starlight
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:theater
+    icon_color: purple
+    name: Movie night
+    tap_action:
+      action: perform-action
+      perform_action: script.downstairs_3
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 6
+      rows: auto
+    visibility:
+    - condition: or
+      conditions:
+      - condition: numeric_state
+        entity: input_number.downstairs_scenes
+        below: 3
+      - condition: numeric_state
+        entity: input_number.downstairs_scenes
+        above: 3
+      - condition: state
+        entity: input_boolean.downstairs
+        state: 'off'
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: custom:mushroom-entity-card
+    entity: scene.cinema_starlight
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:theater
+    icon_color: white
+    name: Movie night
+    tap_action:
+      action: perform-action
+      perform_action: script.downstairs_3
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 6
+      rows: auto
+    visibility:
+    - condition: state
+      entity: input_number.downstairs_scenes
+      state: '3.0'
+    - condition: state
+      entity: input_boolean.downstairs
+      state: 'on'
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: custom:mushroom-entity-card
+    entity: scene.gamenight
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:cards-playing
+    icon_color: green
+    name: Game night
+    tap_action:
+      action: perform-action
+      perform_action: script.downstairs_4
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 6
+      rows: auto
+    visibility:
+    - condition: or
+      conditions:
+      - condition: numeric_state
+        entity: input_number.downstairs_scenes
+        below: 4
+      - condition: numeric_state
+        entity: input_number.downstairs_scenes
+        above: 4
+      - condition: state
+        entity: input_boolean.downstairs
+        state: 'off'
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: custom:mushroom-entity-card
+    entity: scene.gamenight
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:cards-playing
+    icon_color: white
+    name: Game night
+    tap_action:
+      action: perform-action
+      perform_action: script.downstairs_4
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 6
+      rows: auto
+    visibility:
+    - condition: state
+      entity: input_number.downstairs_scenes
+      state: '4.0'
+    - condition: state
+      entity: input_boolean.downstairs
+      state: 'on'
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: tile
+    entity: switch.all_lights
+    name: Turn off all lights
+    icon: mdi:lightbulb-group-off
+    color: dark-grey
+    show_entity_picture: false
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: none
+    icon_tap_action:
+      action: none
+    features:
+    - type: toggle
+    features_position: inline
+    visibility:
+    - condition: state
+      entity: input_select.dashboard
+      state: unknown
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Favorites
+- type: grid
+  cards:
+  - type: markdown
+    title: 🚨 Open Windows (Armed)
+    content: "    {% set standard_entities = {\n      'binary_sensor.bedroom_window': 'Bedroom Window',\n      'binary_sensor.dori_window': 'Dori Window',\n      'binary_sensor.zsofi_window': 'Zsofi Window',\n\
+      \      'binary_sensor.timi_office_window': 'Timi Office Window',\n      'binary_sensor.bathroom_window': 'Bathroom Window',\n      'binary_sensor.kids_bathroom_window1': 'Kids Bathroom Window 1',\n\
+      \      'binary_sensor.kids_bathroom_window2': 'Kids Bathroom Window 2',\n      'binary_sensor.dining_door': 'Dining Door',\n      'binary_sensor.living_room_teracce_door': 'Living Room Terrace Door',\n\
+      \      'binary_sensor.door_sensor_roof_right_contact': 'Roof Right Door Contact',\n      'binary_sensor.kitchen_door': 'Kitchen Door',\n      'binary_sensor.door_sensor_roof_left_contact': 'Roof Left\
+      \ Door Contact'\n    } %}\n    {% set lock_entities = {\n      'lock.qnodoor': 'Entry door',\n    } %}\n    {% set cover_entities = {\n      'cover.roof_back_1': 'Roof Back 1',\n      'cover.roof_back_2':\
+      \ 'Roof Back 2',\n      'cover.roof_room_1': 'Roof Room 1',\n      'cover.roof_room_2': 'Roof Room 2'\n    } %}\n    {%- set ns = namespace(open=[]) -%}\n    {%- for entity_id, name in standard_entities.items()\
+      \ -%}\n      {%- if is_state(entity_id, 'on') -%}\n        {%- set ns.open = ns.open + [name] -%}\n      {%- endif -%}\n    {%- endfor -%}\n    {%- for entity_id, name in lock_entities.items() -%}\n\
+      \      {%- if is_state(entity_id, 'unlocked') -%}\n        {%- set ns.open = ns.open + [name] -%}\n      {%- endif -%}\n    {%- endfor -%}\n    {%- for entity_id, name in cover_entities.items() -%}\n\
+      \      {%- if not is_state(entity_id, 'closed') -%}\n        {%- set ns.open = ns.open + [name] -%}\n      {%- endif -%}\n    {%- endfor -%}\n    {% if ns.open | length > 0 %}\n      **⚠️ {{ ns.open\
+      \ | length }} item(s) open:**\n      {% for name in ns.open %}\n      - {{ name }}\n      {% endfor %}\n    {% else %}\n      ✅ All windows, doors, and covers closed\n    {% endif %}"
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'on'
+  - clock_style: digital
+    clock_size: large
+    time_format: '24'
+    show_seconds: true
+    no_background: true
+    type: clock
+    grid_options:
+      columns: 8
+      rows: 2
+    time_zone: Europe/Zurich
+    face_style: markers
+  - type: tile
+    entity: cover.living_room_shades
+    color: cyan
+    hide_state: false
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-open-close
+    - type: cover-tilt-position
+    features_position: bottom
+    grid_options:
+      columns: 6
+      rows: auto
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: tile
+    entity: cover.kitchen
+    grid_options:
+      columns: 6
+      rows: auto
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-open-close
+    - type: cover-tilt-position
+    features_position: bottom
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: tile
+    entity: cover.upstairs_rooms
+    color: yellow
+    vertical: false
+    grid_options:
+      columns: 6
+      rows: auto
+    features:
+    - type: cover-tilt-position
+    features_position: inline
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: tile
+    entity: cover.roof_north
+    grid_options:
+      columns: 6
+      rows: auto
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: tile
+    entity: valve.irrigation_control_irrigation_side
+    name: Irrigation side
+    icon: mdi:sprinkler-variant
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: tile
+    entity: valve.irrigation_control_irritation_front
+    name: Irrigation front
+    icon: mdi:sprinkler-variant
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: tile
+    entity: button.roof_windows_toggle
+    name: Roof Windows
+    icon: ''
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: tile
+    visibility:
+    - condition: or
+      conditions:
+      - condition: state
+        entity: input_select.dashboard
+        state: Garden
+      - condition: state
+        entity: input_select.dashboard
+        state: Favorites
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+    entity: climate.spa
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: target-temperature
+    features_position: inline
+  - type: tile
+    entity: switch.spa_filter
+    features_position: inline
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    grid_options:
+      columns: 6
+      rows: 1
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: tile
+    entity: switch.spa_power
+    features_position: bottom
+    vertical: false
+    visibility:
+    - condition: state
+      entity: input_boolean.armed
+      state: 'off'
+  - type: tile
+    entity: automation.preheat_pool_on
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Favorites
+- type: grid
+  cards:
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.bathroom_window
+      state: 'on'
+    card:
+      type: heading
+      icon: mdi:bathtub
+      heading: Bathroom
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is open';\n  background: red;\n \
+          \ border-radius: 5px;\n}\n"
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.bathroom_window
+      state: 'off'
+    card:
+      type: heading
+      icon: mdi:bathtub
+      heading: Bathroom
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is closed';\n  background: green;\n\
+          \  border-radius: 5px;\n}\n"
+  - type: tile
+    grid_options:
+      columns: 6
+      rows: 1
+    visibility:
+    - condition: state
+      entity: input_select.dashboard
+      state: Rooms
+    entity: light.bathroomlights
+    name: Bathroom
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+  - type: tile
+    entity: cover.bathroom
+    color: blue
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.bedroom_window
+      state: 'on'
+    card:
+      type: heading
+      icon: mdi:bed
+      heading: Bedroom
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is open';\n  background: red;\n \
+          \ border-radius: 5px;\n}\n"
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.bedroom_window
+      state: 'off'
+    card:
+      type: heading
+      icon: mdi:bed
+      heading: Bedroom
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is closed';\n  background: green;\n\
+          \  border-radius: 5px;\n}\n"
+  - type: tile
+    entity: light.bedroom_ceiling_lights
+    name: Bedroom
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+  - features:
+    - type: target-temperature
+    type: tile
+    entity: climate.bedroom
+    features_position: bottom
+    vertical: false
+    name: Bedroom
+    hide_state: false
+    state_content:
+    - hvac_action
+    - current_temperature
+    - current_humidity
+    tap_action:
+      action: more-info
+    icon_tap_action:
+      action: toggle
+  - type: tile
+    entity: light.saasfee
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+  - type: custom:ring-tile
+    entity: sensor.alpstuga_air_quality_monitor_carbon_dioxide
+    ring_size: 2
+    indicator: dot
+    name: CO2
+    max: 1700
+    colour:
+      '0': ha_grey
+      '1': ha_green
+      '600': ha_green
+      '800': ha_yellow
+      '1000': ha_red
+    top_element: unit
+    middle_element: value
+    bottom_element: name
+    hide_state: true
+    ring_only: true
+    grid_options:
+      columns: 1
+    marker:
+      entity: sensor.alpstuga_air_quality_monitor_carbon_dioxide
+  - type: custom:ring-tile
+    entity: sensor.alpstuga_air_quality_monitor_pm2_5
+    ring_size: 2
+    indicator: dot
+    ring_type: open
+    ring_only: true
+    name: PM 2.5
+    max: 20
+    colour:
+      '0': ha_green
+      '8': ha_green
+      '11': ha_red
+    top_element: unit
+    middle_element: value
+    bottom_element: name
+    marker:
+      entity: sensor.alpstuga_air_quality_monitor_pm2_5
+  - type: custom:ring-tile
+    ring_entity: sensor.alpstuga_air_quality_monitor_humidity
+    entity: sensor.alpstuga_air_quality_monitor_air_quality
+    ring_size: 2
+    indicator: dot
+    ring_type: open
+    ring_only: true
+    name: Humidity
+    min: 0
+    max: 100
+    colour:
+      '0': ha_red
+      '10': ha_red
+      '30': ha_yellow
+      '50': ha_green
+      '70': ha_blue
+      '81': darkblue
+    top_element: icon
+    middle_element: ring_value_with_unit
+    bottom_element: value_with_unit
+    marker:
+      entity: sensor.alpstuga_air_quality_monitor_humidity
+  - type: tile
+    entity: cover.bedroom
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-tilt-position
+    - type: cover-position
+    features_position: inline
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.dori_window
+      state: 'on'
+    card:
+      type: heading
+      icon: mdi:bed
+      heading: Office
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is open';\n  background: red;\n \
+          \ border-radius: 5px;\n}\n"
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.dori_window
+      state: 'off'
+    card:
+      type: heading
+      icon: mdi:bed
+      heading: Office
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is closed';\n  background: green;\n\
+          \  border-radius: 5px;\n}    \n"
+  - type: tile
+    entity: light.timi_office_ceiling
+    name: Office
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+  - features:
+    - type: target-temperature
+    type: tile
+    entity: climate.timi_office
+    features_position: bottom
+    vertical: false
+    name: Office
+    hide_state: false
+    state_content:
+    - hvac_action
+    - current_temperature
+    - current_humidity
+    tap_action:
+      action: more-info
+    icon_tap_action:
+      action: toggle
+  - type: tile
+    entity: cover.timi_office
+    name: Office
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-tilt-position
+    - type: cover-position
+    features_position: inline
+  - type: custom:mushroom-entity-card
+    entity: scene.closet_1
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:mirror-rectangle
+    icon_color: grey
+    name: C1
+    tap_action:
+      action: perform-action
+      perform_action: script.closet_1
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 3
+      rows: auto
+    visibility:
+    - condition: or
+      conditions:
+      - condition: numeric_state
+        entity: input_number.closet_scenes
+        below: 1
+      - condition: numeric_state
+        entity: input_number.closet_scenes
+        above: 1
+      - condition: state
+        entity: input_boolean.closet
+        state: 'off'
+  - type: custom:mushroom-entity-card
+    entity: scene.closet_1
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:mirror-rectangle
+    icon_color: pink
+    name: C1
+    tap_action:
+      action: perform-action
+      perform_action: script.closet_1
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 3
+      rows: auto
+    visibility:
+    - condition: state
+      entity: input_number.closet_scenes
+      state: '1.0'
+    - condition: state
+      entity: input_boolean.closet
+      state: 'on'
+  - type: custom:mushroom-entity-card
+    entity: scene.closet_2
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:mirror-rectangle
+    icon_color: grey
+    name: C2
+    tap_action:
+      action: perform-action
+      perform_action: script.closet_2
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 3
+      rows: auto
+    visibility:
+    - condition: or
+      conditions:
+      - condition: numeric_state
+        entity: input_number.closet_scenes
+        below: 2
+      - condition: numeric_state
+        entity: input_number.closet_scenes
+        above: 2
+      - condition: state
+        entity: input_boolean.closet
+        state: 'off'
+  - type: custom:mushroom-entity-card
+    entity: scene.closet_2
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:mirror-rectangle
+    icon_color: red
+    name: C2
+    tap_action:
+      action: perform-action
+      perform_action: script.closet_2
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 3
+      rows: auto
+    visibility:
+    - condition: state
+      entity: input_number.closet_scenes
+      state: '2.0'
+    - condition: state
+      entity: input_boolean.closet
+      state: 'on'
+  - type: custom:mushroom-entity-card
+    entity: scene.closet_3
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:mirror-rectangle
+    icon_color: grey
+    name: C3
+    tap_action:
+      action: perform-action
+      perform_action: script.closet_3
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 3
+      rows: auto
+    visibility:
+    - condition: or
+      conditions:
+      - condition: numeric_state
+        entity: input_number.closet_scenes
+        below: 3
+      - condition: numeric_state
+        entity: input_number.closet_scenes
+        above: 3
+      - condition: state
+        entity: input_boolean.closet
+        state: 'off'
+  - type: custom:mushroom-entity-card
+    entity: scene.closet_4_2
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:mirror-rectangle
+    icon_color: indigo
+    name: C4
+    tap_action:
+      action: perform-action
+      perform_action: script.closet_4
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 3
+      rows: auto
+    visibility:
+    - condition: state
+      entity: input_number.closet_scenes
+      state: '4.0'
+    - condition: state
+      entity: input_boolean.closet
+      state: 'on'
+  - type: custom:mushroom-entity-card
+    entity: scene.closet_3
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:mirror-rectangle
+    icon_color: cyan
+    name: C3
+    tap_action:
+      action: perform-action
+      perform_action: script.closet_3
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 3
+      rows: auto
+    visibility:
+    - condition: state
+      entity: input_number.closet_scenes
+      state: '3.0'
+    - condition: state
+      entity: input_boolean.closet
+      state: 'on'
+  - type: custom:mushroom-entity-card
+    entity: scene.closet_4_2
+    secondary_info: none
+    icon_type: icon
+    icon: mdi:mirror-rectangle
+    icon_color: grey
+    name: C4
+    tap_action:
+      action: perform-action
+      perform_action: script.closet_4
+      target: {}
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    grid_options:
+      columns: 3
+      rows: auto
+    visibility:
+    - condition: or
+      conditions:
+      - condition: numeric_state
+        entity: input_number.closet_scenes
+        below: 4
+      - condition: numeric_state
+        entity: input_number.closet_scenes
+        above: 4
+      - condition: state
+        entity: input_boolean.closet
+        state: 'off'
+  - type: tile
+    entity: light.corridor_lights
+    features_position: inline
+    vertical: false
+    tap_action:
+      action: toggle
+    hide_state: true
+    name: Corridor
+    features:
+    - type: light-brightness
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Rooms
+- type: grid
+  cards:
+  - type: conditional
+    conditions:
+    - condition: or
+      conditions:
+      - condition: state
+        entity: binary_sensor.kids_bathroom_window1
+        state: 'on'
+      - condition: state
+        entity: binary_sensor.kids_bathroom_window2
+        state: 'on'
+    card:
+      type: heading
+      icon: mdi:bathtub
+      heading: Kids Bathroom
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is open';\n  background: red;\n \
+          \ border-radius: 5px;\n}\n"
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.kids_bathroom_window1
+      state: 'off'
+    - condition: state
+      entity: binary_sensor.kids_bathroom_window2
+      state: 'off'
+    card:
+      type: heading
+      icon: mdi:bathtub
+      heading: Kids Bathroom
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is closed';\n  background: green;\n\
+          \  border-radius: 5px;\n}\n"
+  - type: tile
+    entity: cover.children_bathroom
+    color: blue
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+  - type: tile
+    grid_options:
+      columns: 6
+      rows: 1
+    visibility:
+    - condition: state
+      entity: input_select.dashboard
+      state: Rooms
+    entity: light.kidsbathroomlights
+    name: Kids Bathroom
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.dori_window
+      state: 'on'
+    card:
+      type: heading
+      icon: mdi:teddy-bear
+      heading: Dori
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is open';\n  background: red;\n \
+          \ border-radius: 5px;\n}\n"
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.dori_window
+      state: 'off'
+    card:
+      type: heading
+      icon: mdi:teddy-bear
+      heading: Dori
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is closed';\n  background: green;\n\
+          \  border-radius: 5px;\n}    \n"
+  - type: tile
+    visibility:
+    - condition: state
+      entity: input_select.dashboard
+      state: Rooms
+    entity: light.dori_ceiling
+    name: Dori
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+  - features:
+    - type: target-temperature
+    type: tile
+    entity: climate.dori
+    features_position: bottom
+    vertical: false
+    name: Dori
+    hide_state: false
+    state_content:
+    - hvac_action
+    - current_temperature
+    - current_humidity
+    tap_action:
+      action: more-info
+    icon_tap_action:
+      action: toggle
+  - type: tile
+    entity: light.dori_table
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+  - type: custom:ring-tile
+    entity: sensor.alpstuga_air_quality_monitor_carbon_dioxide_2
+    ring_size: 2
+    indicator: dot
+    name: CO2
+    max: 1700
+    colour:
+      '0': ha_grey
+      '1': ha_green
+      '600': ha_green
+      '800': ha_yellow
+      '1000': ha_red
+    top_element: unit
+    middle_element: value
+    bottom_element: name
+    hide_state: true
+    ring_only: true
+    grid_options:
+      columns: 1
+    marker:
+      entity: sensor.alpstuga_air_quality_monitor_carbon_dioxide_2
+  - type: custom:ring-tile
+    entity: sensor.alpstuga_air_quality_monitor_pm2_5_2
+    ring_size: 2
+    indicator: dot
+    ring_type: open
+    ring_only: true
+    name: PM 2.5
+    max: 20
+    colour:
+      '0': ha_green
+      '8': ha_green
+      '11': ha_red
+    top_element: unit
+    middle_element: value
+    bottom_element: name
+    marker:
+      entity: sensor.alpstuga_air_quality_monitor_pm2_5_2
+  - type: custom:ring-tile
+    ring_entity: sensor.alpstuga_air_quality_monitor_humidity_2
+    entity: sensor.alpstuga_air_quality_monitor_air_quality_2
+    ring_size: 2
+    indicator: dot
+    ring_type: open
+    ring_only: true
+    name: Humidity
+    min: 0
+    max: 100
+    colour:
+      '0': ha_red
+      '10': ha_red
+      '30': ha_yellow
+      '50': ha_green
+      '70': ha_blue
+      '81': darkblue
+    top_element: icon
+    middle_element: ring_value_with_unit
+    bottom_element: value_with_unit
+    marker:
+      entity: sensor.alpstuga_air_quality_monitor_humidity_2
+  - type: tile
+    entity: cover.dori
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-tilt-position
+    - type: cover-position
+    features_position: inline
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.zsofi_window
+      state: 'on'
+    card:
+      type: heading
+      icon: mdi:teddy-bear
+      heading: Zsofi
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is open';\n  background: red;\n \
+          \ border-radius: 5px;\n}\n"
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.zsofi_window
+      state: 'off'
+    card:
+      type: heading
+      icon: mdi:teddy-bear
+      heading: Zsofi
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is closed';\n  background: green;\n\
+          \  border-radius: 5px;\n}   \n"
+  - type: tile
+    visibility:
+    - condition: state
+      entity: input_select.dashboard
+      state: Rooms
+    entity: light.zsofi_ceiling
+    name: Zsofi
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+  - features:
+    - type: target-temperature
+    type: tile
+    entity: climate.zsofi
+    features_position: bottom
+    vertical: false
+    name: Zsofi
+    hide_state: false
+    state_content:
+    - hvac_action
+    - current_temperature
+    - current_humidity
+    tap_action:
+      action: more-info
+    icon_tap_action:
+      action: toggle
+  - type: tile
+    entity: light.zsofi_table
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+  - type: custom:ring-tile
+    entity: sensor.alpstuga_air_quality_monitor_carbon_dioxide_3
+    ring_size: 2
+    indicator: dot
+    name: CO2
+    max: 1700
+    colour:
+      '0': ha_grey
+      '1': ha_green
+      '600': ha_green
+      '800': ha_yellow
+      '1000': ha_red
+    top_element: unit
+    middle_element: value
+    bottom_element: name
+    hide_state: true
+    ring_only: true
+    grid_options:
+      columns: 1
+    marker:
+      entity: sensor.alpstuga_air_quality_monitor_carbon_dioxide_3
+  - type: custom:ring-tile
+    entity: sensor.alpstuga_air_quality_monitor_pm2_5_3
+    ring_size: 2
+    indicator: dot
+    ring_type: open
+    ring_only: true
+    name: PM 2.5
+    max: 20
+    colour:
+      '0': ha_green
+      '8': ha_green
+      '11': ha_red
+    top_element: unit
+    middle_element: value
+    bottom_element: name
+    marker:
+      entity: sensor.alpstuga_air_quality_monitor_pm2_5_3
+  - type: custom:ring-tile
+    ring_entity: sensor.alpstuga_air_quality_monitor_humidity_3
+    entity: sensor.alpstuga_air_quality_monitor_air_quality_3
+    ring_size: 2
+    indicator: dot
+    ring_type: open
+    ring_only: true
+    name: Humidity
+    min: 0
+    max: 100
+    colour:
+      '0': ha_red
+      '10': ha_red
+      '30': ha_yellow
+      '50': ha_green
+      '70': ha_blue
+      '81': darkblue
+    top_element: icon
+    middle_element: ring_value_with_unit
+    bottom_element: value_with_unit
+    marker:
+      entity: sensor.alpstuga_air_quality_monitor_humidity_3
+  - type: tile
+    entity: cover.zsofi
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-tilt-position
+    - type: cover-position
+    features_position: inline
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Rooms
+- type: grid
+  cards:
+  - type: custom:mushroom-light-card
+    entity: light.cinema
+    name: Movie AMBIENT
+    layout: horizontal
+    fill_container: false
+    secondary_info: none
+    primary_info: name
+    icon: mdi:theater
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    show_color_temp_control: false
+    show_brightness_control: true
+    collapsible_controls: true
+    theme: minimalist-mobile-tapbar
+    grid_options:
+      rows: 2
+      columns: 9
+    tap_action:
+      action: perform-action
+      perform_action: script.cinema_0
+      target: {}
+    visibility:
+    - condition: state
+      entity: input_number.cinema_scenes
+      state: '0.0'
+    - condition: state
+      entity: input_boolean.cinema
+      state: 'on'
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.living_room_teracce_door
+      state: 'on'
+    card:
+      type: heading
+      icon: mdi:sofa
+      heading: Living room
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is open';\n  background: red;\n \
+          \ border-radius: 5px;\n}\n"
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.living_room_teracce_door
+      state: 'off'
+    card:
+      type: heading
+      icon: mdi:sofa
+      heading: Living room
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is closed';\n  background: green;\n\
+          \  border-radius: 5px;\n}\n"
+  - type: tile
+    entity: light.lounge_lights_2
+    name: Lounge
+    vertical: false
+    tap_action:
+      action: perform-action
+      perform_action: input_boolean.toggle
+      target:
+        entity_id: input_boolean.lounge
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+  - features:
+    - type: target-temperature
+    type: tile
+    entity: climate.living_room
+    features_position: bottom
+    vertical: false
+    name: Living room
+    grid_options:
+      rows: 2
+    visibility:
+    - condition: state
+      entity: input_select.dashboard
+      state: Living
+    hide_state: false
+    state_content:
+    - hvac_action
+    - current_temperature
+    - current_humidity
+    tap_action:
+      action: more-info
+    icon_tap_action:
+      action: toggle
+  - type: tile
+    entity: switch.lounge_switch
+    icon: mdi:ceiling-light
+    color: accent
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+  - type: tile
+    visibility:
+    - condition: state
+      entity: input_select.dashboard
+      state: Living
+    entity: cover.living_room_1
+    name: Small window
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-tilt-position
+    features_position: inline
+  - type: tile
+    visibility:
+    - condition: state
+      entity: input_select.dashboard
+      state: Living
+    entity: cover.living_room_2
+    name: Teracce door
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-tilt-position
+    features_position: inline
+  - type: custom:ring-tile
+    entity: sensor.indoor_carbon_dioxide
+    ring_size: 2
+    indicator: dot
+    name: CO2
+    max: 1700
+    colour:
+      '0': ha_grey
+      '1': ha_green
+      '600': ha_green
+      '800': ha_yellow
+      '1000': ha_red
+    top_element: name
+    middle_element: value_with_unit
+    bottom_element: name
+    hide_state: true
+    ring_only: true
+    grid_options:
+      columns: 1
+    marker:
+      entity: sensor.indoor_carbon_dioxide
+  - type: custom:ring-tile
+    entity: sensor.indoor_atmospheric_pressure
+    ring_size: 2
+    indicator: arc
+    name: Pressure
+    min: 850
+    max: 1100
+    colour:
+      '850': ha_red
+      '949': ha_red
+      '950': ha_green
+      '1040': ha_green
+      '1041': ha_red
+      '1100': ha_red
+    top_element: name
+    middle_element: value_with_unit
+    bottom_element: name
+    hide_state: true
+    ring_only: true
+    grid_options:
+      columns: 1
+  - type: custom:ring-tile
+    entity: sensor.indoor_humidity
+    ring_size: 2
+    indicator: arc
+    name: Humidity
+    min: 0
+    max: 100
+    colour:
+      '0': ha_red
+      '10': ha_red
+      '30': ha_yellow
+      '50': ha_green
+      '70': ha_blue
+      '81': darkblue
+    top_element: name
+    middle_element: value_with_unit
+    bottom_element: name
+    hide_state: true
+    ring_only: true
+    grid_options:
+      columns: 1
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: lock.qnodoor
+      state: unlocked
+    card:
+      type: heading
+      icon: mdi:lock-open-variant
+      heading: Entry
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Entry door lock is open';\n  background:\
+          \ red;\n  border-radius: 5px;\n}\n"
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: lock.qnodoor
+      state: locked
+    card:
+      type: heading
+      icon: mdi:lock
+      heading: Entry
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Entry door lock is closed';\n  background:\
+          \ green;\n  border-radius: 5px;\n}\n"
+  - type: tile
+    entity: switch.guest_wc
+    icon: mdi:human-male-female
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+  - type: tile
+    entity: light.hallwaylights
+    name: Hallway
+    icon: mdi:light-recessed
+    vertical: false
+    tap_action:
+      action: perform-action
+      perform_action: input_boolean.toggle
+      target:
+        entity_id: input_boolean.hallway
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+  - type: tile
+    entity: light.workshoplights
+    name: Workshop
+    icon: mdi:tools
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+  - type: tile
+    entity: switch.laundry_switch
+    name: Laundry
+    icon: mdi:washing-machine
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Living
+  column_span: 1
+- type: grid
+  cards:
+  - type: tile
+    entity: switch.sync_box_light_sync
+    vertical: false
+    features_position: bottom
+    grid_options:
+      columns: full
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.dining_door
+      state: 'on'
+    card:
+      type: heading
+      icon: mdi:table-chair
+      heading: Dining Room
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is open';\n  background: red;\n \
+          \ border-radius: 5px;\n}\n"
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.dining_door
+      state: 'off'
+    card:
+      type: heading
+      icon: mdi:table-chair
+      heading: Dining Room
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is closed';\n  background: green;\n\
+          \  border-radius: 5px;\n}\n"
+  - features:
+    - type: light-brightness
+    type: tile
+    entity: light.dining_lights_2
+    features_position: inline
+    vertical: false
+    name: Dining
+    tap_action:
+      action: perform-action
+      perform_action: input_boolean.toggle
+      target:
+        entity_id: input_boolean.dining
+    icon_tap_action:
+      action: more-info
+    grid_options:
+      columns: full
+  - type: tile
+    visibility:
+    - condition: state
+      entity: input_select.dashboard
+      state: Living
+    entity: cover.living_room_3
+    name: Big window
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-tilt-position
+    features_position: inline
+  - type: tile
+    visibility:
+    - condition: state
+      entity: input_select.dashboard
+      state: Living
+    entity: cover.living_room_4
+    name: Side door
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-tilt-position
+    features_position: inline
+  - type: tile
+    grid_options:
+      columns: 12
+    visibility:
+    - condition: state
+      entity: input_boolean.wash_is_running
+      state: 'on'
+    entity: sensor.mystrom_device_power
+    name: Washmachine is RUNNING
+    icon: mdi:washing-machine
+    color: amber
+    show_entity_picture: false
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: none
+    icon_tap_action:
+      action: none
+    features_position: bottom
+  - type: tile
+    grid_options:
+      columns: 12
+      rows: 1
+    visibility:
+    - condition: state
+      entity: input_boolean.wash_is_running
+      state: 'off'
+    entity: sensor.mystrom_device_power
+    name: Washmachine is OFF
+    icon: mdi:washing-machine-off
+    color: light-grey
+    show_entity_picture: false
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: none
+    icon_tap_action:
+      action: none
+    features_position: bottom
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.kitchen_door
+      state: 'on'
+    card:
+      type: heading
+      icon: mdi:countertop-outline
+      heading: Kitchen
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is open';\n  background: red;\n \
+          \ border-radius: 5px;\n}\n"
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.kitchen_door
+      state: 'off'
+    card:
+      type: heading
+      icon: mdi:countertop-outline
+      heading: Kitchen
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is closed';\n  background: green;\n\
+          \  border-radius: 5px;\n}\n"
+  - type: tile
+    entity: light.kitchen_desk
+    name: Kitchen counter
+    icon: mdi:countertop-outline
+    vertical: false
+    tap_action:
+      action: perform-action
+      perform_action: input_boolean.toggle
+      target:
+        entity_id: input_boolean.kitchen_desk
+    icon_tap_action:
+      action: none
+    features:
+    - type: light-brightness
+    features_position: inline
+  - type: tile
+    entity: light.kitchen_ceiling_lights
+    name: Kitchen ceiling
+    icon: mdi:wall-sconce-flat
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: light-brightness
+    features_position: inline
+  - type: tile
+    entity: light.kitchen_table_lights
+    name: Kitchen table
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: none
+    features:
+    - type: light-brightness
+    features_position: inline
+  - type: tile
+    entity: cover.kitchen
+    features_position: inline
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-tilt-position
+    visibility:
+    - condition: state
+      entity: input_select.dashboard
+      state: Living
+  - type: custom:ring-tile
+    entity: sensor.indoor_noise
+    ring_size: 2
+    indicator: arc
+    name: Noise
+    min: 0
+    max: 150
+    colour:
+      '0': ha_grey
+      '25': ha_yellow
+      '30': ha_green
+      '65': ha_green
+      '75': ha_yellow
+      '85': ha_red
+    top_element: name
+    middle_element: value_with_unit
+    bottom_element: name
+    hide_state: true
+    ring_only: true
+    grid_options:
+      columns: 1
+    visibility:
+    - condition: state
+      entity: input_select.dashboard
+      state: Undefined
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Living
+  column_span: 1
+- type: grid
+  cards:
+  - type: heading
+    icon: mdi:server
+    heading: NAS
+    heading_style: subtitle
+  - type: picture
+    image:
+      media_content_id: media-source://image_upload/16bdb0480176091fac73796bdd2dace3
+      media_content_type: image/png
+      metadata:
+        title: f28bdd56a38bc94a95d3a33fe85441f5.png
+        thumbnail: /api/image/serve/16bdb0480176091fac73796bdd2dace3/256x256
+        media_class: image
+        navigateIds:
+        - {}
+        - media_content_type: app
+          media_content_id: media-source://image_upload
+  - type: tile
+    entity: sensor.qnonas_volume_1_status
+    vertical: false
+    features_position: bottom
+  - type: tile
+    entity: sensor.qnonas_volume_2_status
+    vertical: false
+    features_position: bottom
+  - type: heading
+    icon: mdi:printer
+    heading: Printer
+    heading_style: subtitle
+  - type: tile
+    entity: sensor.brother_mfc_l3770cdw_series
+    vertical: false
+    tap_action:
+      action: more-info
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+    grid_options:
+      columns: 12
+      rows: 1
+  - type: tile
+    entity: sensor.mfc_l3770cdw_black_toner_remaining
+    name: B
+    color: black
+    vertical: true
+    features_position: bottom
+    grid_options:
+      columns: 3
+      rows: 2
+  - type: tile
+    entity: sensor.mfc_l3770cdw_cyan_toner_remaining
+    name: C
+    color: cyan
+    vertical: true
+    features_position: bottom
+    grid_options:
+      columns: 3
+      rows: 2
+  - type: tile
+    grid_options:
+      columns: 3
+      rows: 2
+    entity: sensor.mfc_l3770cdw_magenta_toner_remaining
+    name: M
+    color: pink
+    show_entity_picture: false
+    hide_state: false
+    vertical: true
+    features_position: bottom
+  - type: tile
+    grid_options:
+      columns: 3
+      rows: 2
+    entity: sensor.mfc_l3770cdw_yellow_toner_remaining
+    name: Y
+    color: accent
+    show_entity_picture: false
+    hide_state: false
+    vertical: true
+    features_position: bottom
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Service
+- type: grid
+  cards:
+  - type: heading
+    icon: mdi:thermometer
+    heading: Roof climate
+    heading_style: subtitle
+  - type: tile
+    grid_options:
+      rows: 1
+      columns: 12
+    entity: climate.roof
+    name: Roof
+    hide_state: false
+    state_content:
+    - hvac_action
+    - current_temperature
+    - current_humidity
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: target-temperature
+    features_position: inline
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.door_sensor_roof_left_contact
+      state: 'on'
+    card:
+      type: heading
+      icon: mdi:home-roof
+      heading: Roof door left
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is open';\n  background: red;\n \
+          \ border-radius: 5px;\n}\n"
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.door_sensor_roof_left_contact
+      state: 'off'
+    card:
+      type: heading
+      icon: mdi:home-roof
+      heading: Roof door left
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is closed';\n  background: green;\n\
+          \  border-radius: 5px;\n}\n"
+  - type: tile
+    grid_options:
+      columns: 12
+      rows: 1
+    entity: cover.roof_door_left
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+    features:
+    - type: cover-tilt-position
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.door_sensor_roof_right_contact
+      state: 'on'
+    card:
+      type: heading
+      icon: mdi:home-roof
+      heading: Roof door right
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is open';\n  background: red;\n \
+          \ border-radius: 5px;\n}\n"
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: binary_sensor.door_sensor_roof_right_contact
+      state: 'off'
+    card:
+      type: heading
+      icon: mdi:home-roof
+      heading: Roof door right
+      heading_style: subtitle
+      card_mod:
+        style: "ha-card {\n  position: relative;\n}\nha-card::after {\n  color: white;\n  position: absolute;\n  right: 10px;\n  padding: 2px 7px 0;\n  content: 'Window is closed';\n  background: green;\n\
+          \  border-radius: 5px;\n}\n"
+  - type: tile
+    grid_options:
+      columns: 12
+      rows: 1
+    entity: cover.roof_door_right
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: inline
+    features:
+    - type: cover-tilt-position
+  - type: heading
+    icon: mdi:lightbulb
+    heading: Roof lights
+    heading_style: subtitle
+  - type: tile
+    entity: light.roof_lights_2
+    name: Roof
+    hide_state: true
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+  - type: tile
+    entity: switch.kuno_office_desk_led
+    icon: mdi:led-strip-variant
+    color: pink
+    vertical: false
+    features_position: bottom
+  - type: custom:ring-tile
+    entity: sensor.alpstuga_air_quality_monitor_carbon_dioxide_4
+    ring_size: 2
+    indicator: dot
+    name: CO2
+    max: 1700
+    colour:
+      '0': ha_grey
+      '1': ha_green
+      '600': ha_green
+      '800': ha_yellow
+      '1000': ha_red
+    top_element: unit
+    middle_element: value
+    bottom_element: name
+    hide_state: true
+    ring_only: true
+    grid_options:
+      columns: 1
+    marker:
+      entity: sensor.alpstuga_air_quality_monitor_carbon_dioxide_4
+  - type: custom:ring-tile
+    entity: sensor.alpstuga_air_quality_monitor_pm2_5_4
+    ring_size: 2
+    indicator: dot
+    ring_type: open
+    ring_only: true
+    name: PM 2.5
+    max: 20
+    colour:
+      '0': ha_green
+      '8': ha_green
+      '11': ha_red
+    top_element: unit
+    middle_element: value
+    bottom_element: name
+    marker:
+      entity: sensor.alpstuga_air_quality_monitor_pm2_5_4
+  - type: custom:ring-tile
+    ring_entity: sensor.alpstuga_air_quality_monitor_humidity_4
+    entity: sensor.alpstuga_air_quality_monitor_air_quality_4
+    ring_size: 2
+    indicator: dot
+    ring_type: open
+    ring_only: true
+    name: Humidity
+    min: 0
+    max: 100
+    colour:
+      '0': ha_red
+      '10': ha_red
+      '30': ha_yellow
+      '50': ha_green
+      '70': ha_blue
+      '81': darkblue
+    top_element: icon
+    middle_element: ring_value_with_unit
+    bottom_element: value_with_unit
+    marker:
+      entity: sensor.alpstuga_air_quality_monitor_humidity_4
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Roof
+- type: grid
+  cards:
+  - type: heading
+    icon: mdi:fridge
+    heading: Kitchen
+    heading_style: subtitle
+  - type: tile
+    entity: cover.roof_back_1
+    name: Roof window back kitchen
+    state_content: state
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-position
+    features_position: inline
+  - type: tile
+    entity: cover.roof_back_shutter_1
+    name: Roof shutter back kitchen
+    state_content: state
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    vertical: false
+    features:
+    - type: cover-position
+    features_position: inline
+  - type: heading
+    icon: mdi:stairs
+    heading: Stairs
+    heading_style: subtitle
+  - type: tile
+    entity: cover.roof_back_2
+    name: Roof window back stairs
+    state_content: state
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-position
+    features_position: inline
+  - type: tile
+    entity: cover.roof_back_shutter_2
+    name: Roof shutter back stairs
+    state_content: state
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    vertical: false
+    features:
+    - type: cover-position
+    features_position: inline
+  - type: heading
+    icon: mdi:dumbbell
+    heading: Gym
+    heading_style: subtitle
+  - type: tile
+    entity: cover.roof_room_1
+    name: Roof window front gym
+    state_content: state
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-position
+    features_position: inline
+  - type: tile
+    entity: cover.roof_room_shutter_1
+    name: Roof shutter front gym
+    state_content: state
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    vertical: false
+    features:
+    - type: cover-position
+    features_position: inline
+  - type: heading
+    icon: mdi:desk
+    heading: Office
+    heading_style: subtitle
+  - type: tile
+    entity: cover.roof_room_2
+    name: Roof window front office
+    state_content: state
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features:
+    - type: cover-position
+    features_position: inline
+  - type: tile
+    entity: cover.roof_room_shutter_2
+    name: Roof shutter front office
+    state_content: state
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    vertical: false
+    features:
+    - type: cover-position
+    features_position: inline
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Roof
+- type: grid
+  cards:
+  - type: custom:weather-forecast-card
+    show_current: false
+    show_forecast: true
+    show_condition_effects: true
+    default_forecast: hourly
+    entity: weather.forecast_home
+    grid_options:
+      columns: full
+      rows: auto
+    name: Weather
+    forecast:
+      mode: chart
+      show_sun_times: true
+      use_color_thresholds: true
+      scroll_to_selected: true
+      default_chart_attribute: temperature_and_precipitation
+      hourly_group_size: 1
+      hourly_slots: 24
+      daily_slots: 8
+      temperature_precision: 1
+      show_attribute_selector: false
+      extra_attribute: precipitation_probability
+    forecast_action:
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+    current:
+      temperature_precision: 1
+      temperature_entity: sensor.indoor_outdoor_module_temperature
+      secondary_info_attribute: humidity
+  - type: custom:weather-forecast-card
+    show_current: false
+    show_forecast: true
+    show_condition_effects: true
+    default_forecast: daily
+    entity: weather.forecast_home
+    grid_options:
+      rows: 4
+      columns: 12
+    name: Weather
+    tap_action:
+      action: none
+    forecast:
+      mode: chart
+      show_sun_times: true
+      use_color_thresholds: true
+      scroll_to_selected: true
+      default_chart_attribute: temperature_and_precipitation
+      hourly_group_size: 1
+      hourly_slots: 14
+      daily_slots: 14
+      temperature_precision: 1
+      show_attribute_selector: false
+      extra_attribute: precipitation_probability
+    forecast_action:
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+    current:
+      temperature_precision: 1
+      temperature_entity: sensor.indoor_outdoor_module_temperature
+      secondary_info_attribute: humidity
+  - type: heading
+    heading: Spa
+    heading_style: subtitle
+    icon: mdi:spa
+    grid_options:
+      columns: 12
+      rows: auto
+  - type: tile
+    grid_options:
+      columns: 12
+      rows: auto
+    visibility:
+    - condition: or
+      conditions:
+      - condition: state
+        entity: input_select.dashboard
+        state: Garden
+      - condition: state
+        entity: input_select.dashboard
+        state: Favorites
+    entity: climate.spa
+    vertical: false
+    tap_action:
+      action: toggle
+    features:
+    - type: target-temperature
+    features_position: inline
+  - type: tile
+    entity: switch.spa_filter
+    features_position: inline
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    grid_options:
+      columns: 6
+      rows: 1
+  - type: tile
+    entity: switch.spa_bubbles
+    features_position: bottom
+    vertical: false
+  - type: tile
+    entity: switch.spa_power
+    features_position: bottom
+    vertical: false
+  - type: tile
+    entity: switch.spa_jets
+    color: red
+    vertical: false
+    features_position: bottom
+  - type: heading
+    heading: Lights
+    heading_style: subtitle
+    icon: mdi:light-flood-up
+  - type: tile
+    entity: light.graden
+    vertical: false
+    features:
+    - type: light-color-favorites
+    features_position: inline
+  - type: tile
+    entity: light.gardenfront
+    vertical: false
+    features_position: inline
+    features:
+    - type: light-color-favorites
+  - type: heading
+    heading: Irrigation
+    heading_style: subtitle
+    icon: mdi:sprinkler-variant
+  - type: tile
+    entity: valve.irrigation_control_irrigation_side
+    icon: mdi:sprinkler-variant
+    color: primary
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+  - type: tile
+    entity: valve.irrigation_control_irritation_front
+    icon: mdi:sprinkler-variant
+    color: primary
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+  - type: tile
+    entity: valve.irrigation_control_side
+    name: Side drops
+    icon: mdi:sprinkler
+    color: pink
+    vertical: false
+    tap_action:
+      action: toggle
+    icon_tap_action:
+      action: more-info
+    features_position: bottom
+  - type: tile
+    entity: sensor.garden_sensor_soil_humidity_2
+    name: Grass humidity
+    vertical: false
+    features_position: inline
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Garden
+  column_span: 2
+- type: grid
+  cards:
+  - type: heading
+    heading: System Monitor
+  - type: custom:ring-tile
+    entity: sensor.system_monitor_memory_usage
+    ring_size: 3
+    indicator: arc
+    ring_type: open
+    ring_only: true
+    name: Memory usage
+    min: 0
+    max: 100
+    colour:
+      '0': ha_blue
+      '30': ha_green
+      '50': ha_green
+      '60': ha_yellow
+      '80': ha_red
+    top_element: icon
+    middle_element: value_with_unit
+    bottom_element: name
+  - type: custom:ring-tile
+    entity: sensor.system_monitor_processor_temperature
+    ring_size: 3
+    indicator: arc
+    ring_type: open
+    ring_only: true
+    name: CPU Temperature
+    min: 10
+    max: 80
+    colour:
+      '10': ha_blue
+      '30': ha_green
+      '45': ha_green
+      '50': ha_yellow
+      '60': ha_red
+    top_element: icon
+    middle_element: value_with_unit
+    bottom_element: name
+  - type: tile
+    entity: sensor.system_monitor_memory_free
+  - type: tile
+    entity: sensor.system_monitor_memory_use
+  - type: tile
+    entity: sensor.system_monitor_processor_use
+  - type: tile
+    entity: sensor.system_monitor_swap_free
+  - type: tile
+    entity: sensor.system_monitor_swap_usage
+  - type: tile
+    entity: sensor.system_monitor_swap_use
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Service
+- type: grid
+  cards:
+  - show_state: false
+    show_name: true
+    camera_view: auto
+    fit_mode: cover
+    type: picture-entity
+    entity: camera.roof_fluent
+    aspect_ratio: '16:10'
+    name: Roof camera
+    grid_options:
+      rows: auto
+  - show_state: false
+    show_name: true
+    camera_view: auto
+    fit_mode: cover
+    type: picture-entity
+    entity: camera.patio_fluent
+    aspect_ratio: '16:10'
+    name: Patio camera
+    grid_options:
+      rows: auto
+  - show_state: false
+    show_name: true
+    camera_view: auto
+    fit_mode: cover
+    type: picture-entity
+    entity: camera.rear_fluent
+    aspect_ratio: '16:10'
+    name: Rear camera
+    grid_options:
+      rows: auto
+  - show_state: false
+    show_name: true
+    camera_view: auto
+    fit_mode: cover
+    type: picture-entity
+    entity: camera.side_fluent
+    aspect_ratio: '16:10'
+    name: Side camera
+    grid_options:
+      rows: auto
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Surveilance
+  column_span: 2
+- type: grid
+  cards:
+  - type: custom:ring-tile
+    name: Warm water
+    entity:
+      entity: sensor.wh_warmwasser_warmwassertemperatur
+    ring_size: 3
+    indicator: arc
+    ring_only: false
+    max: 70
+    colour:
+      '0': ha_grey
+      '35': ha_blue
+      '45': ha_green
+      '60': ha_green
+      '61': ha_yellow
+      '62': ha_yellow
+      '63': ha_red
+    top_element: icon
+    marker: 63
+    marker_color: ha_orange
+    marker2: 40
+    marker2_color: ha_blue
+    middle_element: value_with_unit
+    bottom_element: name
+    scale: ticks_with_labels
+    ring_type: open
+    grid_options:
+      rows: 3
+      columns: 12
+  - type: custom:ring-tile
+    name: Heatpump power
+    entity:
+      entity: sensor.wh_warmepumpe_warmeleistung
+    ring_size: 3
+    indicator: arc
+    ring_only: false
+    max: 25000
+    colour:
+      '10': ha_grey
+      '5000': ha_blue
+      '10000': ha_green
+      '15000': ha_yellow
+      '22000': ha_red
+    top_element: icon
+    middle_element: value_with_unit
+    bottom_element: name
+    scale: ticks_with_labels
+    ring_type: open
+    grid_options:
+      rows: 3
+      columns: 12
+  - type: custom:ring-tile
+    name: Flow temperature
+    entity:
+      entity: sensor.wh_warmepumpe_vorlauftemperatur_prazise_summenvorlauf_b7
+    ring_size: 3
+    indicator: arc
+    max: 80
+    colour:
+      '0': ha_grey
+      '15': ha_blue
+      '30': ha_green
+      '49': ha_green
+      '50': ha_yellow
+      '60': ha_red
+    top_element: icon
+    middle_element: value_with_unit
+    bottom_element: name
+    scale: ticks_with_labels
+    grid_options:
+      rows: 3
+      columns: 12
+  - chart_type: line
+    period: hour
+    type: statistics-graph
+    entities:
+    - sensor.wh_warmwasser_warmwassertemperatur
+    stat_types:
+    - mean
+    - min
+    - max
+    days_to_show: 3
+    title: Warm water (72h)
+    logarithmic_scale: false
+    hide_legend: true
+    grid_options:
+      rows: 4
+      columns: 12
+  - chart_type: bar-stack
+    period: 5minute
+    type: statistics-graph
+    entities:
+    - sensor.wh_warmepumpe_warmeleistung
+    stat_types:
+    - mean
+    days_to_show: 3
+    title: Pump power (72h)
+    logarithmic_scale: false
+    hide_legend: true
+    fit_y_data: true
+    grid_options:
+      rows: 4
+      columns: 12
+  - chart_type: line
+    period: 5minute
+    type: statistics-graph
+    entities:
+    - sensor.wh_warmepumpe_vorlauftemperatur_prazise_summenvorlauf_b7
+    stat_types:
+    - mean
+    - min
+    - max
+    days_to_show: 3
+    title: Flow temp (72h)
+    logarithmic_scale: false
+    hide_legend: true
+    fit_y_data: true
+    grid_options:
+      rows: 4
+      columns: 12
+  - chart_type: line
+    period: day
+    type: statistics-graph
+    entities:
+    - sensor.wh_warmwasser_warmwassertemperatur
+    stat_types:
+    - mean
+    - max
+    - min
+    days_to_show: 30
+    title: Warm water avg (30d)
+    logarithmic_scale: false
+    hide_legend: true
+    grid_options:
+      rows: 4
+      columns: 12
+  - chart_type: bar-stack
+    period: day
+    type: statistics-graph
+    entities:
+    - sensor.wh_warmepumpe_warmeleistung
+    stat_types:
+    - mean
+    days_to_show: 30
+    title: Pump power avg (30d)
+    logarithmic_scale: false
+    hide_legend: false
+    fit_y_data: true
+    grid_options:
+      rows: 4
+      columns: 12
+  - chart_type: line
+    period: day
+    type: statistics-graph
+    entities:
+    - sensor.wh_system_aussentemperatur
+    stat_types:
+    - mean
+    - min
+    - max
+    days_to_show: 30
+    title: Outside avg (30d)
+    logarithmic_scale: false
+    hide_legend: true
+    fit_y_data: true
+    energy_date_selection: false
+    expand_legend: false
+    grid_options:
+      rows: 4
+      columns: 12
+  visibility:
+  - condition: state
+    entity: input_select.dashboard
+    state: Heatpump
+  column_span: 3

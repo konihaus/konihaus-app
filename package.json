@@ -1,0 +1,23 @@
+{
+  "name": "konihaus-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:client": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.3.0",
+    "vite-plugin-pwa": "^2.0.0"
+  },
+  "dependencies": {
+    "@fontsource-variable/outfit": "^5.3.0",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@mdi/font": "^7.4.47",
+    "home-assistant-js-websocket": "^9.7.1",
+    "js-yaml": "^5.5.0"
+  }
+}

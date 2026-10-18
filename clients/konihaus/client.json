@@ -1,0 +1,17 @@
+{
+  "name": "Konihaus",
+  "shortName": "Konihaus",
+  "wordmark": "konihaus",
+  "tagline": "Welcome at Koni's home",
+  "description": "Konihaus smart home",
+  "hassUrl": "",
+  "devUrl": "http://192.168.1.148:8123",
+  "colors": {
+    "forest": "#2a4a35",
+    "forestDeep": "#1e3628",
+    "forestMid": "#3d6b4f",
+    "amber": "#c47c2b",
+    "amberWarm": "#e8c06a",
+    "parchment": "#f7f4ed"
+  }
+}

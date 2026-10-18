@@ -1,0 +1,17 @@
+{
+  "name": "Mustermann Home",
+  "shortName": "Mustermann",
+  "wordmark": "mustermann",
+  "tagline": "Welcome home",
+  "description": "Mustermann smart home",
+  "hassUrl": "",
+  "devUrl": "http://192.168.1.50:8123",
+  "colors": {
+    "forest": "#24364d",
+    "forestDeep": "#182638",
+    "forestMid": "#3a5578",
+    "amber": "#c47c2b",
+    "amberWarm": "#e8c06a",
+    "parchment": "#f7f4ed"
+  }
+}

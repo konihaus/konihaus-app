@@ -1,0 +1,113 @@
+{
+  "skip": [
+    "Music",
+    "Surveilance",
+    "Service",
+    "Heatpump"
+  ],
+  "rooms": {
+    "Living": {
+      "rooms": [
+        "Lounge",
+        "Dining",
+        "Kitchen"
+      ],
+      "common": "Common",
+      "aliases": {
+        "Living room": "Lounge",
+        "Dining Room": "Dining",
+        "Entry": "Common"
+      }
+    },
+    "Rooms": {
+      "rooms": [
+        "Office",
+        "Bedroom",
+        "Zsofi",
+        "Dori",
+        "Bathroom",
+        "Kids bathroom"
+      ],
+      "common": "Common",
+      "aliases": {
+        "Guestroom": "Office"
+      }
+    },
+    "Roof": {
+      "rooms": [
+        "Office",
+        "Gym"
+      ],
+      "common": "Common"
+    }
+  },
+  "assign": [
+    {
+      "match": "scene.closet_*",
+      "room": "Bedroom",
+      "in": "Rooms"
+    },
+    {
+      "match": "light.corridor_lights",
+      "room": "Common",
+      "in": "Rooms"
+    },
+    {
+      "match": "sensor.mystrom_device_power",
+      "room": "Common",
+      "in": "Living"
+    }
+  ],
+  "security": {
+    "windows": [
+      "binary_sensor.bedroom_window",
+      "binary_sensor.dori_window",
+      "binary_sensor.zsofi_window",
+      {
+        "entity": "binary_sensor.timi_office_window",
+        "name": "Timi office window"
+      },
+      "binary_sensor.bathroom_window",
+      "binary_sensor.kids_bathroom_window1",
+      "binary_sensor.kids_bathroom_window2"
+    ],
+    "doors": [
+      {
+        "entity": "lock.qnodoor",
+        "name": "Entry door"
+      },
+      "binary_sensor.dining_door",
+      {
+        "entity": "binary_sensor.living_room_teracce_door",
+        "name": "Living room terrace door"
+      },
+      "binary_sensor.kitchen_door",
+      {
+        "entity": "binary_sensor.door_sensor_roof_left_contact",
+        "name": "Roof door left"
+      },
+      {
+        "entity": "binary_sensor.door_sensor_roof_right_contact",
+        "name": "Roof door right"
+      }
+    ],
+    "roof": [
+      {
+        "entity": "cover.roof_back_1",
+        "name": "Roof window back kitchen"
+      },
+      {
+        "entity": "cover.roof_back_2",
+        "name": "Roof window back stairs"
+      },
+      {
+        "entity": "cover.roof_room_1",
+        "name": "Roof window front gym"
+      },
+      {
+        "entity": "cover.roof_room_2",
+        "name": "Roof window front office"
+      }
+    ]
+  }
+}

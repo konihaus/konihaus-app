@@ -1,0 +1,697 @@
+type: sections
+max_columns: 4
+title: Gym
+path: gym
+icon: mdi:dumbbell
+visible:
+  - user: 6bbad98d8a714df3a15e8f5eb58276d0
+  - user: a05b2a91171b483f86354d025907efd8
+sections:
+  - type: grid
+    cards:
+      - type: heading
+        icon: mdi:thermometer
+        heading: Roof climate
+        heading_style: subtitle
+      - type: thermostat
+        entity: climate.roof
+        show_current_as_primary: true
+        grid_options:
+          columns: 8
+          rows: 6
+        features:
+          - type: climate-hvac-modes
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+            .title {
+              display: none;
+            }
+      - type: custom:ring-tile
+        entity: sensor.alpstuga_air_quality_monitor_carbon_dioxide_4
+        ring_size: 2
+        indicator: dot
+        name: CO2
+        max: 1200
+        colour:
+          '0': ha_grey
+          '1': ha_green
+          '600': ha_green
+          '800': ha_yellow
+          '1000': ha_red
+        top_element: unit
+        middle_element: value
+        bottom_element: name
+        hide_state: true
+        ring_only: true
+        grid_options:
+          columns: 1
+        marker:
+          entity: sensor.alpstuga_air_quality_monitor_carbon_dioxide_4
+        card_mod:
+          style: |
+            ha-card {
+              background-color: rgba(0,0,0,0.0) !important;
+              border: none;
+            }
+      - type: custom:ring-tile
+        entity: sensor.alpstuga_air_quality_monitor_pm2_5_4
+        ring_size: 2
+        indicator: dot
+        ring_type: open
+        ring_only: true
+        name: PM 2.5
+        max: 20
+        colour:
+          '0': ha_green
+          '8': ha_green
+          '11': ha_red
+        top_element: unit
+        middle_element: value
+        bottom_element: name
+        marker:
+          entity: sensor.alpstuga_air_quality_monitor_pm2_5_4
+        card_mod:
+          style: |
+            ha-card {
+              background-color: rgba(0,0,0,0.0) !important;
+              border: none;
+            }
+      - type: custom:ring-tile
+        ring_entity: sensor.alpstuga_air_quality_monitor_humidity_4
+        entity: sensor.alpstuga_air_quality_monitor_air_quality_4
+        ring_size: 2
+        indicator: dot
+        ring_type: open
+        ring_only: true
+        name: Humidity
+        min: 0
+        max: 100
+        colour:
+          '0': ha_red
+          '10': ha_red
+          '30': ha_yellow
+          '50': ha_green
+          '70': ha_blue
+          '81': darkblue
+        top_element: icon
+        middle_element: ring_value_with_unit
+        bottom_element: value_with_unit
+        marker:
+          entity: sensor.alpstuga_air_quality_monitor_humidity_4
+        card_mod:
+          style: |
+            ha-card {
+              background-color: rgba(0,0,0,0.0) !important;
+              border: none;
+            }
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.door_sensor_roof_left_contact
+            state: 'on'
+        card:
+          type: heading
+          icon: mdi:home-roof
+          heading: Roof door left
+          heading_style: subtitle
+          card_mod:
+            style: |
+              ha-card {
+                position: relative;
+              }
+              ha-card::after {
+                color: white;
+                position: absolute;
+                right: 10px;
+                padding: 2px 7px 0;
+                content: 'Window is open';
+                background: red;
+                border-radius: 5px;
+              }
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.door_sensor_roof_left_contact
+            state: 'off'
+        card:
+          type: heading
+          icon: mdi:home-roof
+          heading: Roof door left
+          heading_style: subtitle
+          card_mod:
+            style: |
+              ha-card {
+                position: relative;
+              }
+              ha-card::after {
+                color: white;
+                position: absolute;
+                right: 10px;
+                padding: 2px 7px 0;
+                content: 'Window is closed';
+                background: green;
+                border-radius: 5px;
+              }
+      - type: tile
+        grid_options:
+          columns: 12
+          rows: 1
+        entity: cover.roof_door_left
+        vertical: false
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: more-info
+        features_position: inline
+        features:
+          - type: cover-tilt-position
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.door_sensor_roof_right_contact
+            state: 'on'
+        card:
+          type: heading
+          icon: mdi:home-roof
+          heading: Roof door right
+          heading_style: subtitle
+          card_mod:
+            style: |
+              ha-card {
+                position: relative;
+              }
+              ha-card::after {
+                color: white;
+                position: absolute;
+                right: 10px;
+                padding: 2px 7px 0;
+                content: 'Window is open';
+                background: red;
+                border-radius: 5px;
+              }
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.door_sensor_roof_right_contact
+            state: 'off'
+        card:
+          type: heading
+          icon: mdi:home-roof
+          heading: Roof door right
+          heading_style: subtitle
+          card_mod:
+            style: |
+              ha-card {
+                position: relative;
+              }
+              ha-card::after {
+                color: white;
+                position: absolute;
+                right: 10px;
+                padding: 2px 7px 0;
+                content: 'Window is closed';
+                background: green;
+                border-radius: 5px;
+              }
+      - type: tile
+        grid_options:
+          columns: 12
+          rows: 1
+        entity: cover.roof_door_right
+        vertical: false
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: more-info
+        features_position: inline
+        features:
+          - type: cover-tilt-position
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+      - type: heading
+        icon: mdi:lightbulb
+        heading: Roof lights
+        heading_style: subtitle
+      - type: tile
+        entity: light.roof_lights_2
+        name: Roof
+        hide_state: true
+        vertical: false
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: more-info
+        features_position: bottom
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+      - type: tile
+        entity: switch.kuno_office_desk_led
+        icon: mdi:led-strip-variant
+        color: pink
+        vertical: false
+        features_position: bottom
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+  - type: grid
+    cards:
+      - type: tile
+        entity: cover.roof_covers
+        name: Roof covers
+        state_content: state
+        vertical: false
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: more-info
+        features:
+          - type: cover-position-favorite
+          - type: cover-position
+          - type: cover-open-close
+        features_position: inline
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+      - type: heading
+        icon: mdi:fridge
+        heading: Kitchen
+        heading_style: subtitle
+      - type: tile
+        entity: cover.roof_back_1
+        name: Roof window back kitchen
+        state_content: state
+        vertical: false
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: more-info
+        features:
+          - type: cover-position
+        features_position: inline
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+      - type: tile
+        entity: cover.roof_back_shutter_1
+        name: Roof shutter back kitchen
+        state_content: state
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: more-info
+        vertical: false
+        features:
+          - type: cover-position
+        features_position: inline
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+      - type: heading
+        icon: mdi:stairs
+        heading: Stairs
+        heading_style: subtitle
+      - type: tile
+        entity: cover.roof_back_2
+        name: Roof window back stairs
+        state_content: state
+        vertical: false
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: more-info
+        features:
+          - type: cover-position
+        features_position: inline
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+      - type: tile
+        entity: cover.roof_back_shutter_2
+        name: Roof shutter back stairs
+        state_content: state
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: more-info
+        vertical: false
+        features:
+          - type: cover-position
+        features_position: inline
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+      - type: heading
+        icon: mdi:dumbbell
+        heading: Gym
+        heading_style: subtitle
+      - type: tile
+        entity: cover.roof_room_1
+        name: Roof window front gym
+        state_content: state
+        vertical: false
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: more-info
+        features:
+          - type: cover-position
+        features_position: inline
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+      - type: tile
+        entity: cover.roof_room_shutter_1
+        name: Roof shutter front gym
+        state_content: state
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: more-info
+        vertical: false
+        features:
+          - type: cover-position
+        features_position: inline
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+      - type: heading
+        icon: mdi:desk
+        heading: Office
+        heading_style: subtitle
+      - type: tile
+        entity: cover.roof_room_2
+        name: Roof window front office
+        state_content: state
+        vertical: false
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: more-info
+        features:
+          - type: cover-position
+        features_position: inline
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+      - type: tile
+        entity: cover.roof_room_shutter_2
+        name: Roof shutter front office
+        state_content: state
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: more-info
+        vertical: false
+        features:
+          - type: cover-position
+        features_position: inline
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(120deg,
+                rgba(54, 64, 77, 0.92) 0%,
+                rgba(18, 21, 25, 0.82) 100%) !important;
+              border-radius: 10px !important;
+              border: none !important;
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.12),
+                0 0 14px 3px rgba(65, 115, 125, 0.20),
+                0 4px 20px 0 rgba(0, 0, 0, 0.40),
+                inset 0 1px 0 rgba(100, 160, 170, 0.07) !important;
+              backdrop-filter: blur(4px) !important;
+              transition: box-shadow 0.3s !important;
+            }
+            ha-card:hover {
+              box-shadow:
+                0 0 0 1px rgba(70, 115, 125, 0.16),
+                0 0 20px 5px rgba(65, 115, 125, 0.26),
+                0 8px 28px 0 rgba(0, 0, 0, 0.48),
+                inset 0 1px 0 rgba(120, 180, 180, 0.10) !important;
+            }
+cards: []
