@@ -86,7 +86,7 @@ function showLogin(hassUrl, $app, logoUrl, done) {
       if (flow.type !== "form") throw new Error("unexpected flow");
       renderForm(flow.data_schema ?? []);
     } catch {
-      err.textContent = "Cannot reach Home Assistant. Check your connection or Tailscale.";
+      err.textContent = "Cannot reach Konihaus Greenhub. Check your connection or VPN.";
     }
   }
 
@@ -131,7 +131,7 @@ function showLogin(hassUrl, $app, logoUrl, done) {
       await start(); // abort or something unexpected: start over
       err.textContent = "Sign-in expired. Please try again.";
     } catch {
-      err.textContent = "Cannot reach Home Assistant. Check your connection or Tailscale.";
+      err.textContent = "Cannot reach Konihaus Greenhub. Check your connection or VPN.";
     } finally {
       button.disabled = false;
     }
