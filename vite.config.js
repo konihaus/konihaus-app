@@ -37,15 +37,39 @@ const dropLegacyFonts = {
   },
 };
 
-export default defineConfig({
+// home.json = this client's name/colors/tagline, published next to dashboard.yaml so the multi-home app can read it.
+// homes.json (app build only) = the registry: hashed home name -> Home Assistant address.
+const homeFiles = app => ({
+  name: "home-files",
+  closeBundle() {   // the files copied from public/ come after generateBundle: remove them here
+    if (app) for (const name of ["dashboard.yaml", "navigation.json"]) fs.rmSync(path.join("dist-app", name), { force: true });
+  },
+  generateBundle(_, bundle) {
+    this.emitFile({ type: "asset", fileName: "home.json", source: JSON.stringify(client, null, 2) });
+    if (!app) return;
+    // the app gets each home's dashboard from that home's Home Assistant, never from its own bundle
+    for (const name of ["dashboard.yaml", "navigation.json"]) delete bundle[name];
+    if (fs.existsSync("homes.json"))
+      this.emitFile({ type: "asset", fileName: "homes.json", source: fs.readFileSync("homes.json", "utf8") });
+  },
+});
+
+export default defineConfig(({ mode }) => {
+const app = mode === "app"; // multi-home app build: npm run build:app
+return {
   base: "./",
   publicDir: merged,
-  define: { __CLIENT__: JSON.stringify(client) },
-  build: { outDir: id === "konihaus" ? "dist" : `dist-${id}` },
+  define: { __CLIENT__: JSON.stringify(client), __MULTI__: JSON.stringify(app), __REGISTRY_URL__: JSON.stringify(process.env.REGISTRY_URL ?? ""), __PUSH_URL__: JSON.stringify(process.env.PUSH_URL ?? "") },
+  build: {
+    outDir: app ? "dist-app" : id === "konihaus" ? "dist" : `dist-${id}`,
+    // the iPhone app supports iOS 15 and newer (iPhone 12 and every later model): Safari 15 is the oldest browser engine it must run on
+    ...(app ? { target: "safari15", cssTarget: "safari15" } : {}),
+  },
   plugins: [
     dropLegacyFonts,
     htmlTokens,
-    VitePWA({
+    homeFiles(app),
+    ...(app ? [] : [VitePWA({
       registerType: "autoUpdate",
       workbox: { globPatterns: ["**/*.{js,css,html,woff2,png,svg}"] },
       includeAssets: ["apple-touch-icon-v2.png"],
@@ -64,6 +88,7 @@ export default defineConfig({
           { src: "icon-512-maskable-v2.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
-    }),
+    })]),
   ],
+};
 });

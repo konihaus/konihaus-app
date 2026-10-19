@@ -15,6 +15,9 @@ import { APP_VERSION } from "./version.js";
 import { client } from "./client.js";
 import { loadStructure, cardsFor } from "./rooms.js";
 import { ensureLogin } from "./login.js";
+import { MULTI, selectHome, leaveHome, resolveAddress } from "./home.js";
+import { showLoader } from "./loader.js";
+import { pushSupported, pushState, enablePush, syncPush, disablePush, setPushIdentity } from "./push.js";
 import { loadTokens, saveTokens, clearTokens, requestPersistentStorage } from "./session.js";
 
 const $app = document.querySelector("#app");
@@ -24,43 +27,78 @@ const h = (tag, cls, text) => {
   if (text != null) e.textContent = text;
   return e;
 };
-const HA_URL = import.meta.env.DEV ? client.devUrl : (client.hassUrl || window.location.origin);
+let HA_URL = import.meta.env.DEV && !MULTI ? client.devUrl : (client.hassUrl || window.location.origin);
 
 // ---------- sign in, connect, load dashboard ----------
-const LOGO_URL = new URL(import.meta.env.BASE_URL + "logo.png", location.href).href;
+let ASSET_BASE = new URL(import.meta.env.BASE_URL, location.href).href; // where logo.png, dashboard.yaml, navigation.json live
+let LOGO_URL = ASSET_BASE + "logo.png";
 requestPersistentStorage();
+let HOME = null;   // app: the chosen home (main address, optional home network address)
+if (MULTI) {
+  // multi-home app: asks for the home name the first time, then always uses that home's Home Assistant
+  HOME = await selectHome($app, LOGO_URL);
+  HA_URL = HOME.hassUrl; ASSET_BASE = HOME.assetBase; LOGO_URL = HOME.logoUrl || LOGO_URL;
+  setPushIdentity(HOME.hassUrl);
+  showLoader($app, LOGO_URL);
+}
+// forget this home (and its login) on this phone, back to the "home name" screen
+async function changeHome() {
+  await disablePush(HA_URL);
+  try { await auth?.revoke(); } catch (e) { /* ignore */ }
+  await clearTokens();
+  await leaveHome();
+  location.reload();
+}
 
 // a short, branded screen for "cannot reach Home Assistant" (keeps the saved login!)
-function showRetry() {
+function showRetry(detail = "") {
   return new Promise(resolve => {
     const wrap = h("div", "login-wrap"), card = h("div", "login-card");
     const logo = h("img", "login-logo"); logo.src = LOGO_URL; logo.alt = "";
-    const btn = h("button", "login-btn", "Try again");
+    const btn = h("button", "login-btn", tr("Try again"));
     const go = () => { window.removeEventListener("online", go); wrap.remove(); resolve(); };
     btn.onclick = go;
     window.addEventListener("online", go);
     card.append(logo, h("div", "login-title", client.wordmark),
-      h("div", "login-sub", "Cannot reach Konihaus Greenhub"),
-      h("div", "login-note", "Check that VPN or Wi-Fi is on. You are still signed in."), btn);
+      h("div", "login-sub", tr("Cannot reach Konihaus Greenhub")),
+      h("div", "login-note", tr("Check that VPN or Wi-Fi is on. You are still signed in.")), btn);
+    if (detail) card.append(h("div", "login-detail", detail));   // what was tried and what came back
+    if (MULTI) {
+      const alt = h("button", "login-alt", tr("Not your home? Change home")); alt.type = "button";
+      alt.onclick = changeHome;
+      card.append(alt);
+    }
     wrap.append(card);
     $app.replaceChildren(wrap);
   });
 }
 
-let auth, conn;
+let auth, conn, probeLog = "";
 for (;;) {
-  await ensureLogin(HA_URL, $app, LOGO_URL); // branded login when there is no saved session
+  if (HOME) {
+    // Tailscale address or home network address: whichever answers (checked again after every "Try again")
+    showLoader($app, LOGO_URL);
+    const at = await resolveAddress(HOME);
+    probeLog = at.log.join("\n");
+    HA_URL = at.url; ASSET_BASE = at.assetBase; LOGO_URL = at.logoUrl || LOGO_URL;
+  }
+  await ensureLogin(HA_URL, $app, LOGO_URL, MULTI ? changeHome : null, HOME?.hassUrl); // branded login when there is no saved session
+  showLoader($app, LOGO_URL);   // while connecting and loading the dashboard
   try {
-    auth = await getAuth({ hassUrl: HA_URL, loadTokens, saveTokens });
+    // the saved login belongs to the home, not to one address: it is used with the address that answered
+    const tokensHere = HOME ? async () => { const t = await loadTokens(); return t && { ...t, hassUrl: HA_URL }; } : loadTokens;
+    auth = await getAuth({ hassUrl: HA_URL, loadTokens: tokensHere, saveTokens });
     conn = await createConnection({ auth });
     break;
   } catch (err) {
     if (err === ERR_INVALID_AUTH) { await clearTokens(); continue; } // session really expired: sign in again
-    await showRetry();                                                 // network problem: keep the session, retry
+    await showRetry(`${HA_URL}\n${err?.message ?? (typeof err === "number" ? "connection error " + err : String(err))}` + (probeLog ? "\n" + probeLog : ""));  // network problem: keep the session, retry
   }
 }
 
-const dashUrl = new URL(import.meta.env.BASE_URL + "dashboard.yaml", location.href).href;
+const bust = MULTI ? "?_=" + Date.now() : ""; // the app may be offline-cached by HA for a long time otherwise
+syncPush(auth, HA_URL); // iPhone app: keeps the notification token in Home Assistant up to date
+const dashUrl = new URL("dashboard.yaml", ASSET_BASE).href + bust;
 const dashRes = await fetch(dashUrl, { cache: "no-store" });
 const dashText = await dashRes.text();
 let dashboard;
@@ -73,7 +111,7 @@ if (!dashRes.ok || !view?.sections) {
 
 let NAV = null; // optional per-client navigation.json: second badge row (rooms) per top badge
 try {
-  const r = await fetch(new URL(import.meta.env.BASE_URL + "navigation.json", location.href).href, { cache: "no-store" });
+  const r = await fetch(new URL("navigation.json", ASSET_BASE).href + bust, { cache: "no-store" });
   if (r.ok) NAV = await r.json();
 } catch (e) { /* no navigation file: fine */ }
 
@@ -130,16 +168,18 @@ function tapAction(c, dom, e) {
 const ACTIVE = new Set(["on", "open", "opening", "closing", "heat", "cool", "heat_cool", "auto", "playing", "unlocked"]);
 const isActive = e => !!e && ACTIVE.has(e.state);
 
+// states / modes from Home Assistant ("not_home", "heat_cool", ...) in the chosen language; anything unknown (numbers, names) stays as it is
+const word = s => tr(String(s).replace(/_/g, " "));
 function stateText(e) {
-  if (!e) return "unavailable";
+  if (!e) return word("unavailable");
   const a = e.attributes;
   if (domainOf(e.entity_id) === "cover") {
     const pos = a.current_position;
-    return pos != null ? `${e.state} · ${pos}%` : e.state;
+    return pos != null ? `${word(e.state)} · ${pos}%` : word(e.state);
   }
   if (domainOf(e.entity_id) === "light" && e.state === "on" && a.brightness != null)
-    return `on · ${Math.round(a.brightness / 2.55)}%`;
-  return a.unit_of_measurement ? `${e.state} ${a.unit_of_measurement}` : e.state;
+    return `${word("on")} · ${Math.round(a.brightness / 2.55)}%`;
+  return a.unit_of_measurement ? `${e.state} ${a.unit_of_measurement}` : word(e.state);
 }
 
 // branded "are you sure?" dialog
@@ -150,7 +190,7 @@ function confirmDialog(title, message, okLabel) {
     box.setAttribute("role", "alertdialog");
     box.append(h("div", "modal-title", title), h("div", "modal-text", message));
     const row = h("div", "modal-actions");
-    const cancel = h("button", "chip", "Cancel");
+    const cancel = h("button", "chip", tr("Cancel"));
     const ok = h("button", "chip active", okLabel);
     const close = v => { overlay.remove(); resolve(v); };
     cancel.onclick = () => close(false);
@@ -216,7 +256,7 @@ function feature(f, c, e) {
     case "cover-position":
       return slider(a.current_position, !e, v => svc("cover", "set_cover_position", { entity_id: id, position: v }));
     case "cover-tilt-position":
-      return slider(a.current_tilt_position, !e, v => svc("cover", "set_cover_tilt_position", { entity_id: id, tilt_position: v }), "Tilt");
+      return slider(a.current_tilt_position, !e, v => svc("cover", "set_cover_tilt_position", { entity_id: id, tilt_position: v }), tr("Tilt"));
     case "cover-open-close":
       return buttonRow([
         { ico: "arrow-up", onClick: () => svc("cover", "open_cover", { entity_id: id }) },
@@ -225,7 +265,7 @@ function feature(f, c, e) {
       ]);
     case "climate-hvac-modes":
       return buttonRow((a.hvac_modes ?? []).map(m => ({
-        label: m, active: e.state === m,
+        label: word(m), active: e.state === m,
         onClick: () => svc("climate", "set_hvac_mode", { entity_id: id, hvac_mode: m }),
       })));
     default:
@@ -311,7 +351,7 @@ function forecastChart(list, type, slots, precision) {
   for (const f of items) {
     const d = new Date(f.datetime);
     const slot = h("div", "wx-slot");
-    slot.append(h("div", "wx-time", type === "hourly" ? d.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" }) : d.toLocaleDateString([], { weekday: "short" })));
+    slot.append(h("div", "wx-time", type === "hourly" ? d.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" }) : d.toLocaleDateString(locale(), { weekday: "short" })));
     const ic = h("div", "wx-ic"); ic.append(icon(WEATHER_ICONS[f.condition] ?? "weather-cloudy")); slot.append(ic);
     top.append(slot);
   }
@@ -341,7 +381,7 @@ function renderWeather(c) {
   const id = typeof c.entity === "object" ? c.entity?.entity : c.entity;
   const e = states[id];
   const card = h("div", "card weather");
-  if (!e) { card.append(h("div", "tile-state", "Weather unavailable")); return card; }
+  if (!e) { card.append(h("div", "tile-state", tr("Weather unavailable"))); return card; }
   const a = e.attributes, fc = c.forecast ?? {}, prec = c.current?.temperature_precision ?? 1;
 
   if (c.show_current !== false) {
@@ -352,7 +392,7 @@ function renderWeather(c) {
     const txt = h("div", "wx-cur-text");
     txt.append(h("div", "wx-cur-temp", t != null ? `${t.toFixed(prec)}°` : "–"));
     const sec = c.current?.secondary_info_attribute ? a[c.current.secondary_info_attribute] : null;
-    txt.append(h("div", "tile-state", e.state.replace(/-/g, " ") + (sec != null ? ` · ${sec}${c.current.secondary_info_attribute === "humidity" ? "%" : ""}` : "")));
+    txt.append(h("div", "tile-state", word(e.state === "partlycloudy" ? "partly cloudy" : e.state.replace(/-/g, " ")) + (sec != null ? ` · ${sec}${c.current.secondary_info_attribute === "humidity" ? "%" : ""}` : "")));
     cur.append(txt);
     card.append(cur);
   }
@@ -365,14 +405,14 @@ function renderWeather(c) {
     if (toggles) {
       const row = h("div", "wx-toggle");
       for (const t of ["hourly", "daily"]) {
-        const b = h("button", "chip" + (t === type ? " active" : ""), t);
+        const b = h("button", "chip" + (t === type ? " active" : ""), tr(t));
         b.onclick = () => { weatherMode[key] = t; signature = null; schedule(); };
         row.append(b);
       }
       card.append(row);
     }
-    if (list == null) card.append(h("div", "tile-state", "Loading forecast…"));
-    else if (!list.length) card.append(h("div", "tile-state", "No forecast available"));
+    if (list == null) card.append(h("div", "tile-state", tr("Loading forecast…")));
+    else if (!list.length) card.append(h("div", "tile-state", tr("No forecast available")));
     else card.append(forecastChart(list, type, type === "daily" ? (fc.daily_slots ?? 7) : (fc.hourly_slots ?? 12), fc.temperature_precision ?? 0));
   }
   return card;
@@ -402,12 +442,12 @@ function renderStatsGraph(c) {
   const card = h("div", "card statgraph");
   if (c.title) card.append(h("div", "stat-title", c.title));
   const { ids, types, period, data } = statsFor(c);
-  if (data == null) { card.append(h("div", "tile-state", "Loading…")); return card; }
+  if (data == null) { card.append(h("div", "tile-state", tr("Loading…"))); return card; }
   const bar = c.chart_type === "bar" || c.chart_type === "bar-stack";
   const series = ids.map((id, i) => ({ id, color: LINE_COLORS[i % LINE_COLORS.length], name: states[id]?.attributes?.friendly_name ?? id,
     pts: (data[id] ?? []).map(r => ({ t: r.start, mean: num(r.mean ?? r.state ?? r.sum), min: num(r.min), max: num(r.max) })).filter(p => p.mean != null) }));
   const all = series.flatMap(s => s.pts);
-  if (!all.length) { card.append(h("div", "tile-state", "No statistics yet")); return card; }
+  if (!all.length) { card.append(h("div", "tile-state", tr("No statistics yet"))); return card; }
   const W = 340, H = 140, L = 34, R = 6, T = 8, B = 20;
   const vals = all.flatMap(p => [p.mean, ...(!bar && types.includes("min") && p.min != null ? [p.min] : []), ...(!bar && types.includes("max") && p.max != null ? [p.max] : [])]);
   let lo = Math.min(...vals), hi = Math.max(...vals);
@@ -492,6 +532,7 @@ const renderers = {
       const fe = feature(f, c, e);
       if (fe) card.append(fe);
     }
+    if (card.children.length > 1) card.classList.add("has-feat");   // buttons / slider under the name
     return card;
   },
 
@@ -504,7 +545,7 @@ const renderers = {
     const main = h("div", "thermo-main");
     const cur = h("div", "thermo-current");
     cur.append(h("div", "thermo-big", a.current_temperature != null ? `${a.current_temperature}°` : "–"));
-    cur.append(h("div", "thermo-sub", a.hvac_action ? `${a.hvac_action}` : (e?.state ?? "unavailable")));
+    cur.append(h("div", "thermo-sub", word(a.hvac_action ? a.hvac_action : (e?.state ?? "unavailable"))));
     main.append(cur);
 
     const target = num(a.temperature);
@@ -692,7 +733,7 @@ function dashRows(page) {
     onClick: () => selectDash({ top: b.option, room: "All" }),
   })))];
   if (page.rooms?.length) {
-    rows.push(badgeRow(["All", ...page.rooms].map(r => ({ label: r, active: r === dash.room, onClick: () => selectDash({ room: r }) }))));
+    rows.push(badgeRow(["All", ...page.rooms].map(r => ({ label: r === "All" ? tr("All") : r, active: r === dash.room, onClick: () => selectDash({ room: r }) }))));
   }
   return rows;
 }
@@ -732,12 +773,12 @@ function currentPage() {
   if (dashMode) return dashPage();
   sel = validSel();
   if (sel.p === "fav") {
-    return { title: "Favorites", sub: "", sections: [cardsFor(structure.favorites, states)] };
+    return { title: tr("Favorites"), sub: "", sections: [cardsFor(structure.favorites, states)] };
   }
   if (sel.p === "floor") {
     const f = floorOf(sel.f);
     if (sel.a === "all") {
-      return { title: f.name, sub: "All rooms", sections: f.areas.map(a => [{ type: "heading", heading: a.name, icon: a.icon }, ...cardsFor(a.entities, states)]) };
+      return { title: f.name, sub: tr("All rooms"), sections: f.areas.map(a => [{ type: "heading", heading: a.name, icon: a.icon }, ...cardsFor(a.entities, states)]) };
     }
     const a = f.areas.find(x => x.id === sel.a);
     return { title: a.name, sub: f.name, sections: [cardsFor(a.entities, states)] };
@@ -760,8 +801,8 @@ function badgeRow(items) {
 }
 function levelRow() {
   const items = [];
-  if (structure.favorites.length) items.push({ label: "Favorites", ico: "star-outline", active: sel.p === "fav", onClick: () => select({ p: "fav" }) });
-  items.push({ label: view.title ?? "Home", ico: "home-outline", active: sel.p === "home", onClick: () => select({ p: "home" }) });
+  if (structure.favorites.length) items.push({ label: tr("Favorites"), ico: "star-outline", active: sel.p === "fav", onClick: () => select({ p: "fav" }) });
+  items.push({ label: view.title ?? tr("Home"), ico: "home-outline", active: sel.p === "home", onClick: () => select({ p: "home" }) });
   for (const f of structure.floors) {
     items.push({ label: f.name, ico: f.icon, active: sel.p === "floor" && sel.f === f.id, onClick: () => select({ p: "floor", f: f.id, a: "all" }) });
   }
@@ -769,7 +810,7 @@ function levelRow() {
 }
 function roomRow() {
   const f = floorOf(sel.f);
-  const items = [{ label: "All", active: sel.a === "all", onClick: () => select({ p: "floor", f: f.id, a: "all" }) }];
+  const items = [{ label: tr("All"), active: sel.a === "all", onClick: () => select({ p: "floor", f: f.id, a: "all" }) }];
   for (const a of f.areas) items.push({ label: a.name, ico: a.icon, active: sel.a === a.id, onClick: () => select({ p: "floor", f: f.id, a: a.id }) });
   return badgeRow(items);
 }
@@ -1085,6 +1126,7 @@ function renderSecurity(top) {
   const sheet = h("div", "sheet"), wrap = h("main", "sections"), section = h("section", "section");
   wrap.append(section); sheet.append(wrap);
   if (secSub === "surveillance") {
+    wrap.classList.add("cam-page");   // cameras: 2 columns on wide screens, 1 below 1000px
     const keep = dashSel; dashSel = "Surveilance";
     const secs = view.sections.filter(x => condsOk(x.visibility)).map(x => x.cards ?? []);
     for (const cards of secs) { collectWatched(cards); section.append(...cards.map(renderCard).filter(Boolean)); }
@@ -1123,9 +1165,45 @@ function renderSecurity(top) {
 async function doLogout() {
   const ok = await confirmDialog(tr("Sign out?"), tr("You will need to enter your username and password again on this device."), tr("Sign out"));
   if (!ok) return;
+  await disablePush(HA_URL);
   try { await auth.revoke(); } catch (e) { /* ignore */ }
   await clearTokens();
   location.reload();
+}
+
+// ---------- settings: notifications (iPhone app) ----------
+const pushInfo = { state: undefined, busy: false, error: "" };
+function pushCard() {
+  const refresh = () => { signature = null; schedule(); };
+  if (pushInfo.state === undefined) {
+    pushInfo.state = null;
+    pushState(HA_URL).then(s => { pushInfo.state = s; }).catch(() => { pushInfo.state = { permission: "prompt", registered: false, service: "" }; }).finally(refresh);
+  }
+  const s = pushInfo.state;
+  const card = h("div", "card set-card span12");
+  card.append(h("div", "stat-title", tr("Notifications")));
+  const on = s?.permission === "granted" && s.registered;
+  card.append(settingsRow(tr("Status"), !s ? tr("Loading…") : on ? tr("Enabled") : s.permission === "denied" ? tr("Blocked in iOS Settings") : tr("Not enabled")));
+  if (on && s.service) card.append(settingsRow(tr("Home Assistant service"), s.service));
+  if (s && s.permission !== "denied" && !on) {
+    const b = h("button", "set-btn"); b.type = "button"; b.disabled = pushInfo.busy;
+    b.append(icon("bell-ring-outline"), h("span", null, tr("Enable notifications")));
+    b.onclick = async () => {
+      pushInfo.busy = true; pushInfo.error = ""; refresh();
+      try { await enablePush(auth, HA_URL); } catch (e) { pushInfo.error = String(e?.message ?? e); }
+      pushInfo.state = undefined; pushInfo.busy = false; refresh();
+    };
+    card.append(b);
+  }
+  if (pushInfo.error) card.append(h("div", "tile-state set-hint", tr("Could not enable notifications:") + " " + pushInfo.error));
+  card.append(h("div", "tile-state set-hint", on ? tr("Use this service in Home Assistant automations to send a notification to this phone.") : tr("Lets your home send you alerts, for example when a door is open.")));
+  return card;
+}
+
+async function doLeaveHome() {
+  const ok = await confirmDialog(tr("Leave home?"), tr("You will be signed out of {name}. To connect again you need the home name and your login.", { name: client.name }), tr("Leave home"));
+  if (!ok) return;
+  await changeHome();
 }
 
 // ---------- climate tab: the dashboard's Heatpump section (heating / cooling / solar) ----------
@@ -1137,16 +1215,32 @@ function renderClimate(top) {
   header.append(top, hero);
   const sheet = h("div", "sheet"), wrap = h("main", "sections");
   const keep = dashSel; dashSel = "Heatpump";
+  const cols = dashColumns();                      // 1 on phones; 2-3 on iPad / desktop
+  const groups = [];
   for (const sec of view.sections.filter(x => condsOk(x.visibility))) {
     const cards = sec.cards ?? [];
     collectWatched(cards);
     const el = h("section", "section");
     el.append(...cards.map(renderCard).filter(Boolean));
-    wrap.append(el);
+    groups.push(el);
   }
   dashSel = keep;
+  let masonryWrap = null;
+  if (cols > 1) {
+    // wide screens: the rings become the first row, 2x / 3x bigger (as many times as there are columns), the rest flows into the columns
+    const ringRow = h("div", "ring-row");
+    ringRow.style.setProperty("--n", cols);
+    for (const g of groups) {
+      ringRow.append(...g.querySelectorAll(".ring"));
+      for (const sg of g.querySelectorAll(".subgrid")) if (!sg.children.length) sg.remove();
+    }
+    masonryWrap = h("div", "sections masonry");
+    wrap.classList.add("climate-wide");
+    wrap.append(...(ringRow.children.length ? [ringRow] : []), masonryWrap);
+  } else wrap.append(...groups);
   sheet.append(wrap);
   $app.replaceChildren(header, sheet, bottomNav());
+  if (masonryWrap) masonry(masonryWrap, groups.filter(g => g.children.length), cols);
   if (scrollToTop) { window.scrollTo(0, 0); scrollToTop = false; }
 }
 
@@ -1199,10 +1293,18 @@ function renderSettings(top) {
   const u = settingsInfo.user, cfg = settingsInfo.config;
   const acc = h("div", "card set-card span12");
   acc.append(h("div", "stat-title", tr("Account")));
+  if (MULTI) acc.append(settingsRow(tr("Home"), client.name));
   acc.append(settingsRow(tr("Signed in as"), u ? (u.name ?? "–") : tr("Loading…")));
   if (u?.is_admin != null) acc.append(settingsRow(tr("Role"), u.is_admin ? tr("Administrator") : tr("User")));
   const so = h("button", "set-btn danger"); so.type = "button"; so.append(icon("logout-variant"), h("span", null, tr("Sign out"))); so.onclick = doLogout;
-  acc.append(so); sec.append(acc);
+  acc.append(so);
+  if (MULTI) {
+    const lh = h("button", "set-btn danger"); lh.type = "button"; lh.append(icon("home-export-outline"), h("span", null, tr("Leave home"))); lh.onclick = doLeaveHome;
+    acc.append(lh, h("div", "tile-state set-hint", tr("Signs you out and forgets this home on this device.")));
+  }
+  sec.append(acc);
+
+  if (pushSupported()) sec.append(pushCard());
 
   const ha = h("div", "card set-card span12");
   ha.append(h("div", "stat-title", tr("Home Assistant")));
@@ -1217,7 +1319,7 @@ function renderSettings(top) {
   app.append(h("div", "stat-title", tr("App")));
   app.append(settingsRow(tr("App version"), `${client.name} ${APP_VERSION}`));
   const rl = h("button", "set-btn"); rl.type = "button"; rl.append(icon("reload"), h("span", null, tr("Reload app"))); rl.onclick = reloadApp;
-  app.append(rl, h("div", "tile-state set-hint", tr("Reload app hint")));
+  app.append(rl, h("div", "tile-state set-hint", tr("Clears the cache and loads the latest version.")));
   sec.append(app);
 
   $app.replaceChildren(header, sheet, bottomNav());
@@ -1234,9 +1336,43 @@ function splitAtHeadings(cards) {
   }
   return out;
 }
+const spanOf = el => { for (const k of el.classList) { const m = /^span(\d+)$/.exec(k); if (m) return +m[1]; } return 12; };
+// a group = a 12-column grid of cards; a "row" = the cards that sit side by side (a heading stays with the row after it)
+function rowsOf(sec) {
+  const rows = []; let cur = null, used = 0;
+  for (const el of sec.children) {
+    const w = spanOf(el), head = el.classList.contains("heading");
+    if (cur && cur.head) { cur.els.push(el); if (!head) { cur.head = false; used = w; } continue; }
+    if (cur && !head && used + w <= 12) { cur.els.push(el); used += w; continue; }
+    cur = { els: [el], head }; used = head ? 0 : w; rows.push(cur);
+  }
+  return rows;
+}
+// few groups, many columns (e.g. Favorites = 2 groups on a 3-column screen): the rows are spread evenly, in reading order
+function spread(cols, groups) {
+  cols[0].append(...groups);                                   // all in one column first, to measure the rows
+  const units = [];
+  groups.forEach((g, gi) => {
+    for (const r of rowsOf(g)) {
+      const rects = r.els.map(e => e.getBoundingClientRect());
+      r.h = Math.max(...rects.map(x => x.bottom)) - Math.min(...rects.map(x => x.top)) + 10;
+      r.g = gi; units.push(r);
+    }
+  });
+  const target = units.reduce((t, u) => t + u.h, 0) / cols.length;
+  let k = 0, acc = 0, last = null;
+  for (const u of units) {
+    if (k < cols.length - 1 && acc + u.h / 2 > target * (k + 1)) k++;
+    acc += u.h;
+    if (!last || last.k !== k || last.g !== u.g) { last = { k, g: u.g, sec: h("section", "section") }; cols[k].append(last.sec); }
+    last.sec.append(...u.els);
+  }
+  groups.forEach(g => g.remove());
+}
 function masonry(wrap, groups, n) {
   const cols = Array.from({ length: n }, () => h("div", "mcol"));
   wrap.append(...cols);
+  if (groups.length <= n) return spread(cols, groups);
   for (const g of groups) {
     const shortest = cols.reduce((a, b) => (b.offsetHeight < a.offsetHeight ? b : a));
     shortest.append(g);
@@ -1257,7 +1393,7 @@ function render() {
   const logo = h("img", "brand-logo");
   logo.src = LOGO_URL; logo.alt = "";
   const logout = h("button", "logout");
-  logout.title = "Sign out"; logout.setAttribute("aria-label", "Sign out");
+  logout.title = tr("Sign out"); logout.setAttribute("aria-label", tr("Sign out"));
   logout.append(icon("logout"));
   logout.onclick = doLogout;
   top.append(logo, h("div", "brand", client.wordmark), h("div", "spacer"), logout);
@@ -1272,7 +1408,7 @@ function render() {
   const lightsOn = [...watched].filter(id => id.startsWith("light.") && states[id]?.state === "on").length; // only lights shown on this page
   const hero = h("div", "hero-text");
   hero.append(h("div", "hero-title", page.title));
-  const sub = lightsOn ? (lightsOn === 1 ? "1 light is on" : `${lightsOn} lights are on`) : page.sub;
+  const sub = lightsOn ? (lightsOn === 1 ? tr("1 light is on") : tr("{n} lights are on", { n: lightsOn })) : page.sub;
   if (sub) hero.append(h("div", "hero-sub", sub));
   const wrap = h("main", "sections");
   const cols = dashColumns();                       // 1 on phones, 2+ on iPad / desktop
@@ -1296,8 +1432,8 @@ function render() {
   }
   const sheet = h("div", "sheet");
   if (page.stale) {
-    sheet.append(h("div", "empty", "The dashboard.yaml on the server is an old copy (it has no badges). Delete the old files in /config/www/konihaus and copy the new build again."));
-  } else if (cols > 1 ? !groups.length : (!wrap.children.length || ![...wrap.children].some(x => x.children.length))) sheet.append(h("div", "empty", "Nothing to show here yet."));
+    sheet.append(h("div", "empty", tr("The dashboard.yaml on the server is an old copy (it has no badges). Delete the old files in /config/www/konihaus and copy the new build again.")));
+  } else if (cols > 1 ? !groups.length : (!wrap.children.length || ![...wrap.children].some(x => x.children.length))) sheet.append(h("div", "empty", tr("Nothing to show here yet.")));
   sheet.append(wrap);
 
   // keep the badge rows where the user scrolled them (the page is redrawn on every state change)
@@ -1323,7 +1459,7 @@ const TABS = [
 ];
 function bottomNav() {
   const nav = h("nav", "tabbar");
-  nav.setAttribute("aria-label", "Main menu");
+  nav.setAttribute("aria-label", tr("Main menu"));
   for (const t of TABS) {
     const on = t.id === tab;
     const b = h("button", "tab" + (on ? " active" : ""));

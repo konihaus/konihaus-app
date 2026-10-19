@@ -37,6 +37,7 @@ html, body {
 body { min-height: 100vh; min-height: 100dvh; position: relative; }
 body::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: var(--forest); /* fallback for iOS 15 (no color-mix) */
   background:
     radial-gradient(ellipse 80% 60% at 65% 30%, color-mix(in srgb, var(--forest-mid) 45%, transparent) 0%, transparent 70%),
     radial-gradient(ellipse 50% 80% at 10% 90%, color-mix(in srgb, var(--forest-deep) 60%, transparent) 0%, transparent 60%),
@@ -110,6 +111,7 @@ body::before {
   width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none;
   background: rgba(26, 25, 22, 0.06); color: var(--muted); font-size: 1.35rem; transition: all 0.25s;
 }
+.tile.on .tile-icon { background: #f1ebdc; color: var(--tile-color); } /* fallback for iOS 15 (no color-mix) */
 .tile.on .tile-icon { background: color-mix(in srgb, var(--tile-color) 22%, #fff); color: color-mix(in srgb, var(--tile-color) 78%, #000); }
 .tile-text { min-width: 0; }
 .tile-name { font-weight: 500; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -226,6 +228,7 @@ body::before {
   width: min(calc(100% - 32px), 440px); height: 62px;
   display: flex; align-items: center; justify-content: space-around;
   padding: 0 10px;
+  background: var(--forest-deep); /* fallback for iOS 15 (no color-mix) */
   background: color-mix(in srgb, var(--forest-deep) 97%, transparent);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
   border: 1px solid var(--rule); border-radius: 31px;
@@ -348,6 +351,7 @@ button, .tile-row, .badge-pill, .tab { touch-action: manipulation; }
 /* no sideways scrolling: narrow tiles stack icon over text, and nothing may push the page wider */
 html, body { overflow-x: clip; max-width: 100%; }   /* clip, not hidden: hidden would turn body into a scroll container and block wheel / touch scrolling */
 .sheet, .sections, .section { min-width: 0; overflow-x: clip; }
+@supports not (overflow: clip) { body { overflow-x: hidden; } } /* iOS 15: no "clip"; on body alone it applies to the page, not a scroll box */
 .card { min-width: 0; }
 .card.tile.span2 .tile-row, .card.tile.span3 .tile-row { flex-direction: column; align-items: flex-start; gap: 6px; }
 .card.tile.span2 .tile-text, .card.tile.span3 .tile-text { width: 100%; }
@@ -374,3 +378,61 @@ html, body { overflow-x: clip; max-width: 100%; }   /* clip, not hidden: hidden 
 /* iPad / desktop: dashboard groups flow into columns */
 .sections.masonry { display: flex; gap: 24px; justify-content: center; align-items: flex-start; }
 .sections.masonry > .mcol { flex: 1 1 0; min-width: 0; max-width: 520px; display: flex; flex-direction: column; gap: 22px; }
+
+/* ---- boot / loading screen (also in index.html, before any JavaScript runs) ---- */
+.boot { min-height: 100vh; min-height: 100dvh; position: relative; display: flex; align-items: center; justify-content: center; }
+.boot-logo { width: 23.4vh; max-width: 60vw; height: auto; display: block; }  /* same size as the logo on the launch image */
+@media (orientation: landscape) { .boot-logo { width: 23.4vw; max-width: 40vh; } }
+/* the dots sit under the logo without moving it: the logo stays exactly where the launch image has it */
+.boot-dots { position: absolute; left: 50%; transform: translateX(-50%); top: calc(50% + min(11.4vh, 29.2vw) + 28px); display: flex; gap: 10px; height: 10px; }
+@media (orientation: landscape) { .boot-dots { top: calc(50% + min(11.4vw, 19.5vh) + 28px); } }
+.boot-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); opacity: 0.25; animation: boot-pulse 1.2s ease-in-out infinite; }
+.boot-dots i:nth-child(2) { animation-delay: 0.2s; }
+.boot-dots i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes boot-pulse { 0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .boot-dots i { animation: none; opacity: 0.7; } }
+
+.login-detail { margin-top: 14px; font-size: 11px; line-height: 1.4; opacity: .55; word-break: break-all; white-space: pre-line; text-align: center; }
+
+/* ---- layout polish ---- */
+/* sliders: the range input may shrink, so the % value never gets pushed out of the card */
+.slider input[type="range"] { min-width: 0; }
+/* cards with buttons / a slider (shades, windows, dimmable lights), narrow ones (half width and less): compact, nothing wraps or is cut off */
+.card.has-feat .tile-name { white-space: normal; overflow-wrap: anywhere; line-height: 1.2; }
+.card.has-feat:is(.span3, .span4, .span5, .span6, .span7) { padding: 12px; }
+.card.has-feat:is(.span3, .span4, .span5, .span6, .span7) .btn-row { flex-wrap: nowrap; gap: 6px; margin-top: 12px; }
+.card.has-feat:is(.span3, .span4, .span5, .span6, .span7) .btn-row .chip { flex: 1 1 0; min-width: 0; justify-content: center; padding: 8px 0; }
+.card.has-feat:is(.span3, .span4, .span5, .span6, .span7) .slider { gap: 6px; }
+.card.has-feat:is(.span3, .span4, .span5, .span6, .span7) .slider-label { width: auto; }
+.card.has-feat:is(.span3, .span4, .span5, .span6, .span7) .slider-val { min-width: 0; font-size: 0.75rem; }
+
+/* climate on wide screens: rings are the first row, N times bigger for N columns */
+.sections.climate-wide { display: block; }
+.ring-row {
+  --k: var(--n, 1);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; justify-items: center; align-items: start;
+  max-width: calc(var(--n, 1) * 520px + (var(--n, 1) - 1) * 24px); margin: 6px auto 28px;
+}
+.ring-row .ring { width: 100%; grid-column: auto; }
+.ring-row .ring-svg { max-width: calc(110px * var(--k)); }
+.ring-row .ring-center { height: min(100%, calc(110px * var(--k))); padding-bottom: calc(14px * var(--k)); }
+.ring-row .ring-value { font-size: calc(1.15rem * var(--k)); }
+.ring-row .ring-unit { font-size: calc(0.65rem * var(--k)); }
+.ring-row .ring-name { font-size: calc(0.8rem * (0.6 + 0.4 * var(--k))); margin-top: calc(-6px * var(--k)); }
+
+/* top badges (levels, rooms, security tabs): centred when they fit, scrollable from the left when they do not */
+@media (min-width: 700px) {
+  .badges > :first-child { margin-left: auto; }
+  .badges > :last-child { margin-right: auto; }
+}
+
+/* surveillance: cameras use the full width (up to 1468px), at most 2 columns; below 1000px one column */
+.sections.cam-page { display: block; }
+.cam-page .section { grid-template-columns: minmax(0, 1fr); }
+.cam-page .section > * { grid-column: 1 / -1; }
+.cam-page .card.picture img { aspect-ratio: 16 / 9; object-fit: contain; background: #0e0e0e; min-height: 0; }
+@media (min-width: 1000px) {
+  .cam-page .section { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .cam-page .section > * { grid-column: auto; }
+  .cam-page .section > .heading, .cam-page .section > .subgrid, .cam-page .section > .empty { grid-column: 1 / -1; }
+}

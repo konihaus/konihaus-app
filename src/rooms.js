@@ -1,6 +1,8 @@
 // Levels (floors), rooms (areas) and favorites, read from Home Assistant itself.
 // Floors and areas come from Settings > Areas. Favorites = everything that carries a label named "Favorite".
 
+import { tr } from "./i18n.js";
+
 const SHOWN = new Set([
   "climate", "light", "cover", "switch", "input_boolean", "fan", "lock", "media_player",
   "scene", "script", "button", "sensor", "binary_sensor",
@@ -49,7 +51,7 @@ export async function loadStructure(conn) {
 
   const byName = (a, b) => a.name.localeCompare(b.name);
   const floorList = (floors ?? []).map(f => ({ id: f.floor_id, name: f.name, icon: f.icon ?? null, level: f.level ?? 99, areas: [] }));
-  const loose = { id: "_none", name: "Other", icon: null, level: 1000, areas: [] };
+  const loose = { id: "_none", name: tr("Other"), icon: null, level: 1000, areas: [] };
   for (const a of areas) {
     const ids = byArea.get(a.area_id);
     if (!ids?.length) continue;

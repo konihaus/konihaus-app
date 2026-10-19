@@ -2,6 +2,8 @@
 // then stores the tokens where home-assistant-js-websocket expects them.
 import { loadTokens, saveTokens } from "./session.js";
 import { client } from "./client.js";
+import { MULTI } from "./home.js";
+import { tr } from "./i18n.js";
 
 const h = (tag, cls, text) => {
   const e = document.createElement(tag);
@@ -10,7 +12,7 @@ const h = (tag, cls, text) => {
   return e;
 };
 
-const LABELS = { username: "Username", password: "Password", code: "Authentication code" };
+const LABELS = { username: "Username", password: "Password", code: "Authentication code" };   // shown through tr()
 const AUTOCOMPLETE = { username: "username", password: "current-password", code: "one-time-code" };
 const ERRORS = {
   invalid_auth: "Wrong username or password.",
@@ -18,14 +20,19 @@ const ERRORS = {
 };
 
 // Resolves "ok" (tokens stored) or "fallback" (use the standard Home Assistant login redirect).
-export async function ensureLogin(hassUrl, $app, logoUrl) {
+// onChangeHome (multi-home app only): shows a "Not your home?" link that forgets the chosen home.
+// idUrl (app only): the home's main address. The login always names it as its client, whichever address
+// (Tailscale or home network) is used to reach Home Assistant, so the saved login stays valid on both.
+export async function ensureLogin(hassUrl, $app, logoUrl, onChangeHome, idUrl = hassUrl) {
   if (location.search.includes("auth_callback") || await loadTokens()) return "ok";
-  return new Promise(resolve => showLogin(hassUrl, $app, logoUrl, resolve));
+  return new Promise(resolve => showLogin(hassUrl, $app, logoUrl, resolve, onChangeHome, idUrl));
 }
 
-function showLogin(hassUrl, $app, logoUrl, done) {
-  const clientId = `${location.protocol}//${location.host}/`;
-  const redirectUri = location.origin + location.pathname;
+function showLogin(hassUrl, $app, logoUrl, done, onChangeHome, idUrl) {
+  // web version: the page itself is the OAuth client. App: no web address of its own, so the home's
+  // address is used (Home Assistant only needs client_id and redirect_uri on the same host; nothing is redirected).
+  const clientId = MULTI ? idUrl + "/" : `${location.protocol}//${location.host}/`;
+  const redirectUri = MULTI ? clientId + "local/konihaus/index.html" : location.origin + location.pathname;
 
   const api = async (path, body) => {
     const res = await fetch(hassUrl + path, {
@@ -46,12 +53,19 @@ function showLogin(hassUrl, $app, logoUrl, done) {
   form.noValidate = true;
   const err = h("div", "login-error");
   err.setAttribute("role", "alert");
-  const button = h("button", "login-btn", "Sign in");
+  const button = h("button", "login-btn", tr("Sign in"));
   button.type = "submit";
-  const alt = h("button", "login-alt", "Use the standard Home Assistant sign-in");
+  const alt = h("button", "login-alt", tr("Use the standard Home Assistant sign-in"));
   alt.type = "button";
   alt.onclick = () => { wrap.remove(); done("fallback"); };
-  card.append(logo, title, sub, form, err, alt);
+  card.append(logo, title, sub, form, err);
+  if (!MULTI) card.append(alt); // the standard HA sign-in redirects away from the page, which the app cannot come back from
+  if (onChangeHome) {
+    const change = h("button", "login-alt", tr("Not your home? Change home"));
+    change.type = "button";
+    change.onclick = onChangeHome;
+    card.append(change);
+  }
   wrap.append(card);
   $app.replaceChildren(wrap);
 
@@ -63,7 +77,7 @@ function showLogin(hassUrl, $app, logoUrl, done) {
     form.replaceChildren();
     schema.forEach((f, i) => {
       const label = h("label", "login-field");
-      label.append(h("span", "login-label", LABELS[f.name] ?? f.name));
+      label.append(h("span", "login-label", tr(LABELS[f.name] ?? f.name)));
       const input = h("input");
       input.name = f.name;
       input.type = f.name === "password" ? "password" : "text";
@@ -86,14 +100,15 @@ function showLogin(hassUrl, $app, logoUrl, done) {
       if (flow.type !== "form") throw new Error("unexpected flow");
       renderForm(flow.data_schema ?? []);
     } catch {
-      err.textContent = "Cannot reach Konihaus Greenhub. Check your connection or VPN.";
+      err.textContent = tr("Cannot reach Konihaus Greenhub. Check your connection or VPN.");
     }
   }
 
   async function exchange(code) {
     const res = await fetch(hassUrl + "/auth/token", {
       method: "POST",
-      body: new URLSearchParams({ client_id: clientId, code, grant_type: "authorization_code" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ client_id: clientId, code, grant_type: "authorization_code" }).toString(),
     });
     if (!res.ok) throw new Error("token exchange failed");
     const t = await res.json();
@@ -125,13 +140,13 @@ function showLogin(hassUrl, $app, logoUrl, done) {
         flow = r;
         renderForm(r.data_schema ?? []);
         const code = r.errors?.base;
-        if (code) err.textContent = ERRORS[code] ?? "Sign-in failed.";
+        if (code) err.textContent = tr(ERRORS[code] ?? "Sign-in failed.");
         return;
       }
       await start(); // abort or something unexpected: start over
-      err.textContent = "Sign-in expired. Please try again.";
+      err.textContent = tr("Sign-in expired. Please try again.");
     } catch {
-      err.textContent = "Cannot reach Konihaus Greenhub. Check your connection or VPN.";
+      err.textContent = tr("Cannot reach Konihaus Greenhub. Check your connection or VPN.");
     } finally {
       button.disabled = false;
     }
