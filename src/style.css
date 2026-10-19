@@ -344,3 +344,33 @@ button, .tile-row, .badge-pill, .tab { touch-action: manipulation; }
 .set-btn { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 16px; border-radius: 14px; border: 1px solid var(--chip-line); background: var(--chip-bg); color: inherit; font: inherit; cursor: pointer; }
 .set-btn.danger { color: #a65b5b; }
 .set-hint { margin-top: 6px; }
+
+/* no sideways scrolling: narrow tiles stack icon over text, and nothing may push the page wider */
+html, body { overflow-x: clip; max-width: 100%; }   /* clip, not hidden: hidden would turn body into a scroll container and block wheel / touch scrolling */
+.sheet, .sections, .section { min-width: 0; overflow-x: clip; }
+.card { min-width: 0; }
+.card.tile.span2 .tile-row, .card.tile.span3 .tile-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+.card.tile.span2 .tile-text, .card.tile.span3 .tile-text { width: 100%; }
+.card.tile.span2 .tile-name, .card.tile.span3 .tile-name { white-space: normal; overflow-wrap: anywhere; line-height: 1.2; }
+
+/* energy on big screens: tiles in one row, chart and device list side by side (phones keep the single column) */
+@media (min-width: 700px) {
+  .sections.energy-page { grid-template-columns: minmax(0, 1100px); }
+  .energy-page .en-tiles { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); padding: 0; }
+  .energy-page .en-chart.span12 { grid-column: span 7; }
+  .energy-page .en-devs.span12 { grid-column: span 5; }
+  .energy-page .en-devs { align-self: stretch; }
+  .energy-page .stat-svg { max-height: 340px; }
+}
+
+/* energy extras */
+.en-delta { font-size: 0.72rem; margin-top: 4px; font-variant-numeric: lining-nums; color: var(--muted); }
+.en-delta.up { color: #a65b5b; }
+.en-delta.down { color: #3f6b50; }
+.en-bar.grey::after { background: #b9beb7; }
+@media (min-width: 700px) { .energy-page .en-wide.span12 { grid-column: span 12; } }
+@media (min-width: 700px) { .energy-page .en-wide .stat-svg { max-height: 280px; } }
+
+/* iPad / desktop: dashboard groups flow into columns */
+.sections.masonry { display: flex; gap: 24px; justify-content: center; align-items: flex-start; }
+.sections.masonry > .mcol { flex: 1 1 0; min-width: 0; max-width: 520px; display: flex; flex-direction: column; gap: 22px; }

@@ -807,8 +807,29 @@ function energyRange() {
   return { start: new Date(now.getFullYear(), 0, 1), period: "month" };
 }
 
+// electricity flows with their price setup (for the cost tile)
+function energyFlows(prefs) {
+  const from = [], to = [];
+  for (const src of prefs?.energy_sources ?? []) {
+    if (src.type !== "grid") continue;
+    for (const f of src.flow_from ?? []) from.push({ stat: f.stat_energy_from, cost: f.stat_cost, price: f.number_energy_price, priceEntity: f.entity_energy_price });
+    for (const f of src.flow_to ?? []) to.push({ stat: f.stat_energy_to, cost: f.stat_compensation, price: f.number_energy_price, priceEntity: f.entity_energy_price });
+  }
+  return { from, to };
+}
+function energyPrevRange() {
+  const { start } = energyRange();
+  const days = { today: 1, week: 7, month: 30 }[energy.range];
+  if (!days) return null;
+  const prevStart = new Date(start); prevStart.setDate(prevStart.getDate() - days);
+  return { prevStart, end: start, elapsed: Date.now() - start.getTime(), label: { today: "yesterday", week: "previous 7 days", month: "previous 30 days" }[energy.range] };
+}
 function energyData() {
   const refresh = () => { signature = null; schedule(); };
+  if (energy.currency === undefined) {
+    energy.currency = null;
+    conn.sendMessagePromise({ type: "get_config" }).then(c => { energy.currency = c?.currency ?? ""; }).catch(() => { energy.currency = ""; }).finally(refresh);
+  }
   if (energy.prefs === undefined) {
     energy.prefs = null;
     conn.sendMessagePromise({ type: "energy/get_prefs" }).then(p => { energy.prefs = p; }).catch(() => { energy.prefs = { error: true }; }).finally(refresh);
@@ -816,8 +837,22 @@ function energyData() {
   }
   if (!energy.prefs || energy.prefs.error) return null;
   const setup = energySetup(energy.prefs);
-  const ids = [...new Set([...Object.entries(setup).flatMap(([k, v]) => k === "devices" ? v.map(x => x.id) : v)])];
+  const fl = energyFlows(energy.prefs);
+  const costIds = [...fl.from, ...fl.to].map(f => f.cost).filter(Boolean);
+  const mainIds = [...new Set([...Object.entries(setup).flatMap(([k, v]) => k === "devices" ? [] : v)])];
+  const ids = [...new Set([...mainIds, ...setup.devices.map(x => x.id), ...costIds])];
   const { start, period } = energyRange();
+  const pr = energyPrevRange();
+  if (pr && mainIds.length) {
+    const pk = energy.range + "|prev", po = energy.cache[pk];
+    if (!po || (!po.busy && Date.now() - po.at > 300e3)) {
+      energy.cache[pk] = { data: po?.data ?? null, at: Date.now(), busy: true };
+      conn.sendMessagePromise({ type: "recorder/statistics_during_period", start_time: pr.prevStart.toISOString(), end_time: pr.end.toISOString(), statistic_ids: mainIds, period, types: ["change"] })
+        .then(r => { energy.cache[pk] = { data: r, at: Date.now() }; })
+        .catch(() => { energy.cache[pk] = { data: {}, at: Date.now() }; })
+        .finally(refresh);
+    }
+  }
   const key = energy.range, old = energy.cache[key];
   if (ids.length && (!old || (!old.busy && Date.now() - old.at > 300e3))) {
     energy.cache[key] = { data: old?.data ?? null, at: Date.now(), busy: true };
@@ -827,7 +862,8 @@ function energyData() {
       .finally(refresh);
   }
   const data = energy.cache[key]?.data;
-  return data ? { setup, data, period } : null;
+  const prevData = pr ? energy.cache[energy.range + "|prev"]?.data : null;
+  return data ? { setup, data, period, start, flows: fl, prev: prevData ? { data: prevData, ...pr } : null, currency: energy.currency } : null;
 }
 
 // per-statistic series [{t, v}] in kWh (or the sensor's own unit for gas / water)
@@ -865,6 +901,34 @@ function energyChart(groups, period) {
   return svg;
 }
 
+// stacked bars: one colored segment per series for every time slot
+function stackedChart(series, period) {
+  const W = 340, H = 160, L = 34, R = 6, T = 8, B = 20;
+  const times = [...new Set(series.flatMap(g => g.pts.map(p => p.t)))].sort((a, b) => a - b);
+  if (!times.length) return h("div", "tile-state", tr("No data in this period"));
+  const sums = times.map(t => series.reduce((a, g) => a + (g.pts.find(p => p.t === t)?.v ?? 0), 0));
+  const max = Math.max(...sums, 0.1);
+  const slot = (W - L - R) / times.length, bw = Math.max(1.5, slot * 0.8);
+  const Y = v => T + (1 - v / max) * (H - T - B);
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "stat-svg" });
+  for (let i = 0; i <= 3; i++) {
+    const v = max * i / 3, y = Y(v);
+    svg.append(svgEl("line", { x1: L, x2: W - R, y1: y, y2: y, stroke: "var(--chip-line)", "stroke-width": 0.6 }));
+    const tx = svgEl("text", { x: L - 4, y: y + 3, "text-anchor": "end", class: "stat-ax" }); tx.textContent = v >= 10 ? v.toFixed(0) : v.toFixed(1); svg.append(tx);
+  }
+  times.forEach((t, ti) => {
+    let acc = 0;
+    for (const g of series) {
+      const v = g.pts.find(p => p.t === t)?.v ?? 0; if (v <= 0) continue;
+      svg.append(svgEl("rect", { x: L + ti * slot + (slot - bw) / 2, y: Y(acc + v), width: bw, height: Math.max(0.5, Y(acc) - Y(acc + v)), fill: g.color }));
+      acc += v;
+    }
+  });
+  const lab = t => { const d = new Date(t); return period === "hour" ? d.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" }) : period === "month" ? d.toLocaleDateString(locale(), { month: "short" }) : d.toLocaleDateString(locale(), { day: "numeric", month: "numeric" }); };
+  [[times[0], "start", L], [times[times.length - 1], "end", W - R]].forEach(([t, a, x]) => { const tx = svgEl("text", { x, y: H - 5, "text-anchor": a, class: "stat-ax" }); tx.textContent = lab(t); svg.append(tx); });
+  return svg;
+}
+
 function renderEnergy(top) {
   watched.clear();
   const hero = h("div", "hero-text");
@@ -872,55 +936,107 @@ function renderEnergy(top) {
   const header = h("header", "hero");
   header.append(top, hero, badgeRow(RANGES.map(([id, label]) => ({ label: tr(label), active: energy.range === id, onClick: () => { energy.range = id; signature = null; schedule(); } }))));
 
-  const sheet = h("div", "sheet"), wrap = h("main", "sections"), sec = h("section", "section");
+  const sheet = h("div", "sheet"), wrap = h("main", "sections energy-page"), sec = h("section", "section");
   wrap.append(sec); sheet.append(wrap);
   const res = energyData();
   if (energy.prefs?.error) sec.append(h("div", "empty", tr("Could not read the energy configuration from Home Assistant.")));
   else if (!res) sec.append(h("div", "empty", energy.prefs && !energySetup(energy.prefs).gridIn.length && !energySetup(energy.prefs).solar.length && !energySetup(energy.prefs).devices.length ? tr("The Home Assistant energy dashboard has nothing configured.") : tr("Loading energy data…")));
   else {
-    const { setup: s, data, period } = res;
+    const { setup: s, data, period, start, flows, prev, currency } = res;
     const gridIn = sumSeries(data, s.gridIn), gridOut = sumSeries(data, s.gridOut), solar = sumSeries(data, s.solar);
     const battIn = sumSeries(data, s.battIn), battOut = sumSeries(data, s.battOut);
     const home = total(gridIn) + total(solar) + total(battOut) - total(gridOut) - total(battIn);
+    // comparison with the previous period (same elapsed time)
+    const prevTotal = (ids, sign = 1) => {
+      if (!prev) return null;
+      const m = new Map();
+      for (const id of ids) for (const p of seriesOf(prev.data, id)) if (p.t - prev.prevStart.getTime() < prev.elapsed) m.set(p.t, (m.get(p.t) ?? 0) + p.v);
+      return sign * [...m.values()].reduce((a, v) => a + v, 0);
+    };
+    const delta = (cur, before) => {
+      if (before == null || before < 0.05) return null;
+      const pct = Math.round((cur - before) / before * 100);
+      return { text: `${pct >= 0 ? "▲" : "▼"} ${Math.abs(pct)}% ${tr("vs")} ${tr(prev.label)}`, up: pct >= 0 };
+    };
+    const homePrev = prev ? prevTotal(s.gridIn) + prevTotal(s.solar) + prevTotal(s.battOut) - prevTotal(s.gridOut) - prevTotal(s.battIn) : null;
     const tiles = [];
-    const add = (label, ico, val, color) => tiles.push([label, ico, val, color]);
-    if (s.gridIn.length) add(tr("Grid consumption"), "transmission-tower-export", fmtKwh(total(gridIn)), "#c47a28");
+    const add = (label, ico, val, color, d) => tiles.push([label, ico, val, color, d]);
+    if (s.gridIn.length) add(tr("Grid consumption"), "transmission-tower-export", fmtKwh(total(gridIn)), "#c47a28", delta(total(gridIn), prevTotal(s.gridIn)));
     if (s.gridOut.length) add(tr("Returned to grid"), "transmission-tower-import", fmtKwh(total(gridOut)), "#5f7fb0");
     if (s.solar.length) add(tr("Solar"), "solar-power", fmtKwh(total(solar)), "#3f6b50");
     if (s.battIn.length || s.battOut.length) add(tr("Battery in / out"), "battery-charging", `${total(battIn).toFixed(1)} / ${total(battOut).toFixed(1)} kWh`, "#7a6aa8");
-    if (s.gridIn.length || s.solar.length) add(tr("Home usage"), "home-lightning-bolt-outline", fmtKwh(Math.max(0, home)), "#a65b5b");
+    if (s.gridIn.length || s.solar.length) add(tr("Home usage"), "home-lightning-bolt-outline", fmtKwh(Math.max(0, home)), "#a65b5b", delta(home, homePrev));
+    if (energy.range !== "today") {
+      const days = Math.max(1, Math.ceil((Date.now() - start.getTime()) / 86400e3));
+      add(tr("Daily average"), "chart-timeline-variant", fmtKwh(Math.max(0, home) / days), "#7a6aa8");
+    }
     if (s.gas.length) add(tr("Gas"), "fire", `${total(sumSeries(data, s.gas, false)).toFixed(1)} ${states[s.gas[0]]?.attributes?.unit_of_measurement ?? ""}`, "#c47a28");
     if (s.water.length) add(tr("Water"), "water-outline", `${total(sumSeries(data, s.water, false)).toFixed(1)} ${states[s.water[0]]?.attributes?.unit_of_measurement ?? ""}`, "#5f7fb0");
+    // cost: HA's own cost statistic when it has one, otherwise the fixed or current price times the energy
+    let cost = 0, approx = false, haveCost = false;
+    const flowCost = (f, kwh) => {
+      if (f.cost) { haveCost = true; return total(sumSeries(data, [f.cost], false)); }
+      const price = f.price ?? num(states[f.priceEntity]?.state);
+      if (price == null) return 0;
+      haveCost = true; if (f.price == null) approx = true;
+      return kwh * price;
+    };
+    for (const f of flows.from) cost += flowCost(f, total(sumSeries(data, [f.stat])));
+    for (const f of flows.to) cost -= flowCost(f, total(sumSeries(data, [f.stat])));
+    if (haveCost) add(tr("Cost"), "cash", `${approx ? "≈ " : ""}${cost.toFixed(2)} ${currency ?? ""}`.trim(), "#3f6b50");
+
     const grid = h("div", "card en-tiles span12");
-    for (const [label, ico, val, color] of tiles) {
+    for (const [label, ico, val, color, d] of tiles) {
       const t = h("div", "en-tile"); t.style.setProperty("--k", color);
       const ic = h("div", "en-ic"); ic.append(icon(ico));
       t.append(ic, h("div", "en-val", val), h("div", "tile-state", label));
+      if (d) t.append(h("div", "en-delta " + (d.up ? "up" : "down"), d.text));
       grid.append(t);
     }
     sec.append(grid);
 
     const groups = [[tr("Consumption"), gridIn, "#c47a28"], [tr("Solar"), solar, "#3f6b50"], [tr("Returned"), gridOut, "#5f7fb0"]].filter(g => g[1].length).map(([name, pts, color]) => ({ name, pts, color }));
     if (groups.length) {
-      const card = h("div", "card statgraph span12");
+      const card = h("div", "card statgraph en-chart span12");
       card.append(h("div", "stat-title", tr("Electricity (kWh)")), energyChart(groups, period));
       const lg = h("div", "stat-legend");
       for (const g of groups) { const i = h("span", "stat-key"); i.style.setProperty("--k", g.color); i.textContent = g.name; lg.append(i); }
       card.append(lg); sec.append(card);
     }
 
-    const devs = s.devices.map(d => ({ name: d.name ?? states[d.id]?.attributes?.friendly_name ?? d.id, v: total(sumSeries(data, [d.id])) })).sort((a, b) => b.v - a.v);
+    const devs = s.devices.map(d => ({ id: d.id, name: d.name ?? states[d.id]?.attributes?.friendly_name ?? d.id, v: total(sumSeries(data, [d.id])) })).sort((a, b) => b.v - a.v);
+    const untracked = Math.max(0, home - devs.reduce((a, d) => a + d.v, 0));
+    if (devs.length && (s.gridIn.length || s.solar.length) && untracked > 0.05) devs.push({ name: tr("Untracked consumption"), v: untracked, grey: true });
+    devs.sort((a, b) => b.v - a.v);
     if (devs.length) {
-      const card = h("div", "card en-devices span12");
+      const card = h("div", "card en-devices en-devs span12");
       card.append(h("div", "stat-title", tr("Devices")));
       const top = Math.max(devs[0].v, 0.001);
       for (const d of devs) {
         const row = h("div", "en-dev");
-        const bar = h("div", "en-bar"); bar.style.setProperty("--w", Math.max(1, d.v / top * 100) + "%");
+        const bar = h("div", "en-bar" + (d.grey ? " grey" : "")); bar.style.setProperty("--w", Math.max(1, d.v / top * 100) + "%");
         row.append(h("div", "en-dev-name", d.name), h("div", "en-dev-val", fmtKwh(d.v)), bar);
         card.append(row);
       }
       sec.append(card);
+
+      // devices over time (stacked), with the untracked remainder in grey
+      const COLORS = ["#c47a28", "#3f6b50", "#5f7fb0", "#a65b5b", "#7a6aa8", "#2a9d8f"];
+      const real = devs.filter(d => d.id);
+      const top6 = real.slice(0, 6).map((d, i) => ({ name: d.name, color: COLORS[i], pts: sumSeries(data, [d.id]) }));
+      const rest = real.slice(6);
+      if (rest.length) top6.push({ name: tr("Other devices"), color: "#9aa59d", pts: sumSeries(data, rest.map(d => d.id)) });
+      if (s.gridIn.length || s.solar.length) {
+        const times = [...new Set([...gridIn, ...solar, ...gridOut, ...battIn, ...battOut].map(p => p.t))].sort((a, b) => a - b);
+        const at = (pts, t) => pts.find(p => p.t === t)?.v ?? 0;
+        const pts = times.map(t => ({ t, v: Math.max(0, at(gridIn, t) + at(solar, t) + at(battOut, t) - at(gridOut, t) - at(battIn, t) - top6.reduce((a, g) => a + at(g.pts, t), 0)) }));
+        top6.push({ name: tr("Untracked consumption"), color: "#cfd3cd", pts });
+      }
+      const wide = h("div", "card statgraph en-wide span12");
+      wide.append(h("div", "stat-title", tr("Devices over time (kWh)")), stackedChart(top6, period));
+      const lg2 = h("div", "stat-legend");
+      for (const g of top6) { const i = h("span", "stat-key"); i.style.setProperty("--k", g.color); i.textContent = g.name; lg2.append(i); }
+      wide.append(lg2); sec.append(wide);
     }
   }
   $app.replaceChildren(header, sheet, bottomNav());
@@ -1108,6 +1224,34 @@ function renderSettings(top) {
   if (scrollToTop) { window.scrollTo(0, 0); scrollToTop = false; }
 }
 
+// wide screens: heading-led groups flow into 2-3 columns, each group goes to the currently shortest column
+const dashColumns = () => Math.max(1, Math.min(3, Math.floor((Math.min(window.innerWidth, 1468) - 32) / 430)));
+function splitAtHeadings(cards) {
+  const out = [];
+  for (const c of cards) {
+    if (headingOf(c) != null || !out.length) out.push([]);
+    out[out.length - 1].push(c);
+  }
+  return out;
+}
+function masonry(wrap, groups, n) {
+  const cols = Array.from({ length: n }, () => h("div", "mcol"));
+  wrap.append(...cols);
+  for (const g of groups) {
+    const shortest = cols.reduce((a, b) => (b.offsetHeight < a.offsetHeight ? b : a));
+    shortest.append(g);
+  }
+}
+let layoutKey = dashColumns();
+let resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const k = dashColumns();
+    if (k !== layoutKey) { layoutKey = k; signature = null; schedule(); }
+  }, 150);
+});
+
 function render() {
   const top = h("div", "topbar");
   const logo = h("img", "brand-logo");
@@ -1131,11 +1275,18 @@ function render() {
   const sub = lightsOn ? (lightsOn === 1 ? "1 light is on" : `${lightsOn} lights are on`) : page.sub;
   if (sub) hero.append(h("div", "hero-sub", sub));
   const wrap = h("main", "sections");
+  const cols = dashColumns();                       // 1 on phones, 2+ on iPad / desktop
+  const groups = [];
   for (const cards of page.sections) {
-    const sec = h("section", "section");
-    sec.append(...cards.map(renderCard).filter(Boolean));
-    wrap.append(sec);
+    for (const part of (cols > 1 ? splitAtHeadings(cards) : [cards])) {
+      const sec = h("section", "section");
+      sec.append(...part.map(renderCard).filter(Boolean));
+      if (cols > 1 && !sec.children.length) continue;
+      groups.push(sec);
+    }
   }
+  if (cols === 1) wrap.append(...groups);
+  else wrap.classList.add("masonry");
   const header = h("header", "hero");
   header.append(top, hero);
   if (dashMode) header.append(...dashRows(page));
@@ -1146,12 +1297,14 @@ function render() {
   const sheet = h("div", "sheet");
   if (page.stale) {
     sheet.append(h("div", "empty", "The dashboard.yaml on the server is an old copy (it has no badges). Delete the old files in /config/www/konihaus and copy the new build again."));
-  } else if (!wrap.children.length || ![...wrap.children].some(x => x.children.length)) sheet.append(h("div", "empty", "Nothing to show here yet."));
+  } else if (cols > 1 ? !groups.length : (!wrap.children.length || ![...wrap.children].some(x => x.children.length))) sheet.append(h("div", "empty", "Nothing to show here yet."));
   sheet.append(wrap);
 
   // keep the badge rows where the user scrolled them (the page is redrawn on every state change)
   const old = [...$app.querySelectorAll(".badges")].map(r => r.scrollLeft);
+  const keepY = scrollToTop ? 0 : window.scrollY;
   $app.replaceChildren(header, sheet, bottomNav());
+  if (cols > 1) { masonry(wrap, groups, cols); window.scrollTo(0, keepY); }
   const rows = [...$app.querySelectorAll(".badges")];
   rows.forEach((r, i) => {
     if (scrollToTop) r.querySelector(".active")?.scrollIntoView({ block: "nearest", inline: "center" });

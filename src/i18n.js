@@ -4,6 +4,7 @@ export const LANGS = [["en", "English"], ["de", "Deutsch"], ["hu", "Magyar"]];
 const LOCALES = { en: "en-GB", de: "de-CH", hu: "hu-HU" };
 
 const de = {
+  "Daily average": "Tagesdurchschnitt", "Cost": "Kosten", "vs": "ggü.", "yesterday": "gestern", "previous 7 days": "vorherige 7 Tage", "previous 30 days": "vorherige 30 Tage", "Untracked consumption": "Nicht erfasster Verbrauch", "Other devices": "Weitere Geräte", "Devices over time (kWh)": "Geräte im Zeitverlauf (kWh)",
   "Climate": "Klima", "Security": "Sicherheit", "Home": "Zuhause", "Energy": "Energie", "Settings": "Einstellungen",
   "Cockpit": "Übersicht", "Surveillance": "Überwachung", "{n} open": "{n} offen", "closed": "geschlossen",
   "All closed": "Alles geschlossen", "Everything closed": "Alles geschlossen",
@@ -26,6 +27,7 @@ const de = {
   "Connected": "Verbunden", "Role": "Rolle", "Status": "Status", "Loading…": "Wird geladen…",
 };
 const hu = {
+  "Daily average": "Napi átlag", "Cost": "Költség", "vs": "vs", "yesterday": "tegnap", "previous 7 days": "előző 7 nap", "previous 30 days": "előző 30 nap", "Untracked consumption": "Nem mért fogyasztás", "Other devices": "Egyéb eszközök", "Devices over time (kWh)": "Eszközök időben (kWh)",
   "Climate": "Klíma", "Security": "Biztonság", "Home": "Otthon", "Energy": "Energia", "Settings": "Beállítások",
   "Cockpit": "Áttekintés", "Surveillance": "Megfigyelés", "{n} open": "{n} nyitva", "closed": "zárva",
   "All closed": "Minden zárva", "Everything closed": "Minden zárva",
