@@ -99,7 +99,7 @@ for (;;) {
     break;
   } catch (err) {
     if (err === ERR_INVALID_AUTH) { await clearTokens(); continue; } // session really expired: sign in again
-    await showRetry(`${HA_URL}\n${err?.message ?? (typeof err === "number" ? "connection error " + err : String(err))}` + (probeLog ? "\n" + probeLog : ""));  // network problem: keep the session, retry
+    await showRetry();  // network problem: keep the session, retry
   }
 }
 
