@@ -58,7 +58,10 @@ function showLogin(hassUrl, $app, logoUrl, done, onChangeHome, idUrl) {
   const alt = h("button", "login-alt", tr("Use the standard Home Assistant sign-in"));
   alt.type = "button";
   alt.onclick = () => { wrap.remove(); done("fallback"); };
-  card.append(logo, title, sub, form, err);
+  // shown when Home Assistant cannot be reached: starts the app again, which asks both addresses again
+  const again = h("button", "login-btn", tr("Try again")); again.type = "button"; again.hidden = true;
+  again.onclick = () => location.reload();
+  card.append(logo, title, sub, form, err, again);
   if (!MULTI) card.append(alt); // the standard HA sign-in redirects away from the page, which the app cannot come back from
   if (onChangeHome) {
     const change = h("button", "login-alt", tr("Not your home? Change home"));
@@ -92,7 +95,7 @@ function showLogin(hassUrl, $app, logoUrl, done, onChangeHome, idUrl) {
   }
 
   async function start() {
-    err.textContent = "";
+    err.textContent = ""; again.hidden = true;
     try {
       flow = await api("/auth/login_flow", {
         client_id: clientId, redirect_uri: redirectUri, handler: ["homeassistant", null],
@@ -101,6 +104,7 @@ function showLogin(hassUrl, $app, logoUrl, done, onChangeHome, idUrl) {
       renderForm(flow.data_schema ?? []);
     } catch {
       err.textContent = tr("Cannot reach Konihaus Greenhub. Check your connection or VPN.");
+      again.hidden = false;
     }
   }
 

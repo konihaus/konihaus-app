@@ -436,3 +436,4 @@ html, body { overflow-x: clip; max-width: 100%; }   /* clip, not hidden: hidden 
   .cam-page .section > * { grid-column: auto; }
   .cam-page .section > .heading, .cam-page .section > .subgrid, .cam-page .section > .empty { grid-column: 1 / -1; }
 }
+.login-btn[hidden] { display: none; }
