@@ -6,6 +6,7 @@
   "description": "Konihaus smart home",
   "hassUrl": "",
   "devUrl": "http://192.168.1.148:8123",
+  "localUrl": "http://192.168.1.148:8123",
   "colors": {
     "forest": "#2a4a35",
     "forestDeep": "#1e3628",

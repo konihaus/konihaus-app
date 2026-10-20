@@ -68,6 +68,13 @@ function showRetry(detail = "") {
       alt.onclick = changeHome;
       card.append(alt);
     }
+    // web version: when the main address (Tailscale) is not reachable, the same page is also served on the home network
+    const local = client.localUrl ? String(client.localUrl).replace(/\/+$/, "") : "";
+    if (!MULTI && local && location.origin !== local) {
+      const net = h("button", "login-alt", tr("Use the home network address")); net.type = "button";
+      net.onclick = () => { location.href = local + location.pathname; };
+      card.append(net);
+    }
     wrap.append(card);
     $app.replaceChildren(wrap);
   });

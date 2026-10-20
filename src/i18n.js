@@ -173,6 +173,7 @@ const de = {
   "Use the standard Home Assistant sign-in": "Standard-Anmeldung von Home Assistant verwenden",
   "Cannot reach Konihaus Greenhub. Check your connection or VPN.": "Konihaus Greenhub ist nicht erreichbar. Prüfe deine Verbindung oder das VPN.",
   "Sign-in expired. Please try again.": "Anmeldung abgelaufen. Bitte versuche es erneut.",
+  "Use the home network address": "Adresse im Heimnetz verwenden",
 };
 const fr = {
   "Daily average": "Moyenne quotidienne",
@@ -343,6 +344,7 @@ const fr = {
   "Use the standard Home Assistant sign-in": "Utiliser la connexion standard de Home Assistant",
   "Cannot reach Konihaus Greenhub. Check your connection or VPN.": "Konihaus Greenhub est injoignable. Vérifiez votre connexion ou le VPN.",
   "Sign-in expired. Please try again.": "La connexion a expiré. Veuillez réessayer.",
+  "Use the home network address": "Utiliser l'adresse du réseau local",
 };
 const it = {
   "Daily average": "Media giornaliera",
@@ -513,6 +515,7 @@ const it = {
   "Use the standard Home Assistant sign-in": "Usa l'accesso standard di Home Assistant",
   "Cannot reach Konihaus Greenhub. Check your connection or VPN.": "Konihaus Greenhub non è raggiungibile. Controlla la connessione o la VPN.",
   "Sign-in expired. Please try again.": "L'accesso è scaduto. Riprova.",
+  "Use the home network address": "Usa l'indirizzo della rete locale",
 };
 const dict = { en: {}, de, fr, it };
 
